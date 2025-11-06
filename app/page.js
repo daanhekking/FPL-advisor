@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { 
   Layout, Tabs, Card, Button, Typography, 
-  Space, Statistic, Row, Col, Dropdown, Spin, Alert 
+  Space, Statistic, Row, Col, Dropdown, Spin, Alert, Tag 
 } from 'antd'
 import { 
   SwapOutlined, ReloadOutlined
@@ -17,6 +17,7 @@ import {
   getWeakPlayersTableColumns, 
   getSquadTableColumns 
 } from './components/TableColumns'
+import { getPositionName } from './utils/helpers'
 
 const { Content } = Layout
 const { Title, Text } = Typography
@@ -284,6 +285,72 @@ export default function MyTeamAdvisor() {
     }).filter(p => p !== null)
   }, [myPicks, allPlayers, allTeams, fixtures])
 
+  // Calculate total team points
+  const totalTeamPoints = useMemo(() => {
+    return myPlayerData.reduce((sum, player) => sum + (player.total_points || 0), 0)
+  }, [myPlayerData])
+
+  // Calculate best fixtures by team
+  const bestFixtureTeams = useMemo(() => {
+    if (allPlayers.length === 0 || allTeams.length === 0 || fixtures.length === 0) {
+      return []
+    }
+
+    const upcomingFixtures = fixtures.filter(f => !f.finished_provisional).slice(0, 50)
+    
+    // Calculate average difficulty for each team
+    const teamFixtureData = allTeams.map(team => {
+      const teamFixtures = upcomingFixtures
+        .filter(f => f.team_h === team.id || f.team_a === team.id)
+        .slice(0, 5)
+        .map(f => {
+          const isHome = f.team_h === team.id
+          const opponentId = isHome ? f.team_a : f.team_h
+          const opponent = allTeams.find(t => t.id === opponentId)
+          const difficulty = isHome ? f.team_h_difficulty : f.team_a_difficulty
+          return {
+            opponent: opponent?.short_name || 'TBD',
+            difficulty,
+            isHome,
+            event: f.event
+          }
+        })
+      
+      const avgDifficulty = teamFixtures.length > 0
+        ? teamFixtures.reduce((sum, f) => sum + f.difficulty, 0) / teamFixtures.length
+        : 5
+
+      // Get top 10 players from this team
+      const teamPlayers = allPlayers
+        .filter(p => p.team === team.id && p.minutes > 100)
+        .map(p => {
+          const avgPoints = p.minutes > 0 ? (p.total_points / (p.minutes / 90)).toFixed(1) : '0.0'
+          const medianPoints = p.minutes > 0 ? (p.total_points / (p.minutes / 90) * 0.85).toFixed(1) : '0.0' // Approximation
+          return {
+            ...p,
+            avgPoints,
+            medianPoints,
+            fixtures: teamFixtures
+          }
+        })
+        .sort((a, b) => b.total_points - a.total_points)
+        .slice(0, 10)
+
+      return {
+        ...team,
+        fixtures: teamFixtures,
+        avgDifficulty,
+        players: teamPlayers
+      }
+    })
+    
+    // Sort teams by best fixtures (lowest difficulty)
+    return teamFixtureData
+      .filter(t => t.fixtures.length > 0)
+      .sort((a, b) => a.avgDifficulty - b.avgDifficulty)
+      .slice(0, 10) // Top 10 teams with best fixtures
+  }, [allPlayers, allTeams, fixtures])
+
   // Memoized handlers
   const handleRetry = useCallback(() => {
     setTeamId(prev => prev) // Trigger refetch by updating state
@@ -399,14 +466,21 @@ export default function MyTeamAdvisor() {
                   </Text>
                 </Space>
               </Col>
-              <Col xs={8} sm={8} md={4} lg={4}>
+              <Col xs={8} sm={8} md={6} lg={3}>
                 <Statistic 
-                  title="Points" 
+                  title="GW Points" 
                   value={myPicks.entry_history?.points || 0} 
                   valueStyle={{ color: '#1677ff', fontSize: 'clamp(18px, 4vw, 24px)' }}
                 />
               </Col>
-              <Col xs={8} sm={8} md={4} lg={4}>
+              <Col xs={8} sm={8} md={6} lg={3}>
+                <Statistic 
+                  title="Total Points" 
+                  value={totalTeamPoints} 
+                  valueStyle={{ fontSize: 'clamp(18px, 4vw, 24px)' }}
+                />
+              </Col>
+              <Col xs={8} sm={8} md={6} lg={3}>
                 <Statistic 
                   title="Team Value" 
                   value={((myPicks.entry_history?.value || 0) / 10).toFixed(1)} 
@@ -415,7 +489,7 @@ export default function MyTeamAdvisor() {
                   valueStyle={{ fontSize: 'clamp(18px, 4vw, 24px)' }}
                 />
               </Col>
-              <Col xs={8} sm={8} md={4} lg={4}>
+              <Col xs={8} sm={8} md={6} lg={3}>
                 <Statistic 
                   title="Bank" 
                   value={((myPicks.entry_history?.bank || 0) / 10).toFixed(1)} 
@@ -511,14 +585,68 @@ export default function MyTeamAdvisor() {
             </Tabs.TabPane>
 
             <Tabs.TabPane tab="📅 Best Fixtures" key="3">
-              <Card title="⭐ Teams with Best Upcoming Fixtures">
-                <Alert
-                  message="Coming Soon"
-                  description="Fixture analysis by team will be available soon"
-                  type="info"
-                  showIcon
-                />
-              </Card>
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                {bestFixtureTeams.map((team, idx) => (
+                  <Card 
+                    key={team.id}
+                    title={
+                      <Space>
+                        <Text strong style={{ fontSize: 18 }}>
+                          #{idx + 1} {team.name}
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 14 }}>
+                          Avg Difficulty: {team.avgDifficulty.toFixed(2)}
+                        </Text>
+                      </Space>
+                    }
+                    extra={
+                      <Space size={4}>
+                        {team.fixtures.map((fixture, fIdx) => (
+                          <Tag 
+                            key={fIdx}
+                            color={
+                              fixture.difficulty <= 2 ? 'success' : 
+                              fixture.difficulty <= 3 ? 'warning' : 
+                              'error'
+                            }
+                          >
+                            {fixture.isHome ? '' : '@'}{fixture.opponent}
+                          </Tag>
+                        ))}
+                      </Space>
+                    }
+                  >
+                    <Row gutter={[16, 16]}>
+                      {team.players.map(player => (
+                        <Col xs={24} sm={12} md={8} lg={6} key={player.id}>
+                          <Card 
+                            size="small" 
+                            hoverable
+                            style={{ height: '100%' }}
+                          >
+                            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                              <Text strong style={{ fontSize: 14 }}>
+                                {player.web_name}
+                              </Text>
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {getPositionName(player.element_type)} • £{(player.now_cost / 10).toFixed(1)}m
+                              </Text>
+                              <Space split={<Text type="secondary">•</Text>} style={{ fontSize: 12 }}>
+                                <span>Total: {player.total_points}</span>
+                                <span>Form: {player.form}</span>
+                              </Space>
+                              <Space split={<Text type="secondary">•</Text>} style={{ fontSize: 12 }}>
+                                <span>Avg: {player.avgPoints}</span>
+                                <span>Med: {player.medianPoints}</span>
+                              </Space>
+                            </Space>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Card>
+                ))}
+              </Space>
             </Tabs.TabPane>
           </Tabs>
         </Space>
