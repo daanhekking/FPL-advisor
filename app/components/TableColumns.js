@@ -116,31 +116,42 @@ export const createPositionColumn = () => ({
   onFilter: (value, record) => record.element_type === value,
 })
 
-// Pre-configured column sets for different table types
-export const getTargetsTableColumns = () => [
-  createPlayerColumn({ showPosition: true, showForm: false }),
-  createFixturesColumn(5),
-  createAvgDifficultyColumn(),
-  createPriceColumn(),
-  createFormColumn(),
-  createTotalPointsColumn(),
-  createPPGColumn(),
-  createAvgPointsColumn(),
-]
-
-export const getWeakPlayersTableColumns = () => [
-  createPlayerColumn({ showPosition: true, showForm: true }),
-  createFixturesColumn(5),
-  createFormColumn(),
-  createPriceColumn(),
-]
-
-export const getSquadTableColumns = () => [
-  createPlayerColumn({ showCaptaincy: true, showBench: true, showPosition: false }),
+// Standardized column set - used across all tables
+const getStandardColumns = (options = {}) => [
+  createPlayerColumn({ 
+    showPosition: false, 
+    showForm: false,
+    showCaptaincy: options.showCaptaincy || false,
+    showBench: options.showBench || false
+  }),
   createPositionColumn(),
   createFixturesColumn(5),
   createAvgDifficultyColumn(),
-  createTotalPointsColumn(),
-  createFormColumn(),
   createPriceColumn(),
+  createFormColumn(),
+  createPPGColumn(),
+  createTotalPointsColumn(),
+]
+
+// Pre-configured column sets for different table types
+export const getTargetsTableColumns = () => getStandardColumns()
+
+export const getWeakPlayersTableColumns = () => getStandardColumns()
+
+export const getSquadTableColumns = () => getStandardColumns({ 
+  showCaptaincy: true, 
+  showBench: true 
+})
+
+// Best Fixtures table - excludes fixtures and avg difficulty columns
+export const getBestFixturesTableColumns = () => [
+  createPlayerColumn({ 
+    showPosition: false, 
+    showForm: false,
+  }),
+  createPositionColumn(),
+  createPriceColumn(),
+  createFormColumn(),
+  createPPGColumn(),
+  createTotalPointsColumn(),
 ]

@@ -15,9 +15,9 @@ import { TransferCard } from './components/TransferCard'
 import { 
   getTargetsTableColumns, 
   getWeakPlayersTableColumns, 
-  getSquadTableColumns 
+  getSquadTableColumns,
+  getBestFixturesTableColumns 
 } from './components/TableColumns'
-import { getPositionName } from './utils/helpers'
 
 const { Content } = Layout
 const { Title, Text } = Typography
@@ -73,7 +73,10 @@ const generateRecommendations = (picks, players, teams, fixtures, numTransfers, 
     .map(p => {
       const team = teams.find(t => t.id === p.team)
       const fixtures = getPlayerFixtures(p.id, players, teams, upcomingFixtures)
-      return { ...p, fixtures, team }
+      const avgDifficulty = fixtures.length > 0
+        ? fixtures.reduce((sum, f) => sum + f.difficulty, 0) / fixtures.length
+        : 3
+      return { ...p, fixtures, team, avgDifficulty }
     })
     .sort((a, b) => parseFloat(a.form || 0) - parseFloat(b.form || 0))
   
@@ -285,10 +288,8 @@ export default function MyTeamAdvisor() {
     }).filter(p => p !== null)
   }, [myPicks, allPlayers, allTeams, fixtures])
 
-  // Calculate total team points
-  const totalTeamPoints = useMemo(() => {
-    return myPlayerData.reduce((sum, player) => sum + (player.total_points || 0), 0)
-  }, [myPlayerData])
+  // Get overall points from FPL API (manager's total points for the season)
+  const overallPoints = myTeam?.summary_overall_points || 0
 
   // Calculate best fixtures by team
   const bestFixtureTeams = useMemo(() => {
@@ -323,16 +324,10 @@ export default function MyTeamAdvisor() {
       // Get top 10 players from this team
       const teamPlayers = allPlayers
         .filter(p => p.team === team.id && p.minutes > 100)
-        .map(p => {
-          const avgPoints = p.minutes > 0 ? (p.total_points / (p.minutes / 90)).toFixed(1) : '0.0'
-          const medianPoints = p.minutes > 0 ? (p.total_points / (p.minutes / 90) * 0.85).toFixed(1) : '0.0' // Approximation
-          return {
-            ...p,
-            avgPoints,
-            medianPoints,
-            fixtures: teamFixtures
-          }
-        })
+        .map(p => ({
+          ...p,
+          fixtures: teamFixtures
+        }))
         .sort((a, b) => b.total_points - a.total_points)
         .slice(0, 10)
 
@@ -475,8 +470,8 @@ export default function MyTeamAdvisor() {
               </Col>
               <Col xs={8} sm={8} md={6} lg={3}>
                 <Statistic 
-                  title="Total Points" 
-                  value={totalTeamPoints} 
+                  title="Overall Points" 
+                  value={overallPoints} 
                   valueStyle={{ fontSize: 'clamp(18px, 4vw, 24px)' }}
                 />
               </Col>
@@ -600,7 +595,7 @@ export default function MyTeamAdvisor() {
                       </Space>
                     }
                     extra={
-                      <Space size={4}>
+                      <Space size={4} wrap>
                         {team.fixtures.map((fixture, fIdx) => (
                           <Tag 
                             key={fIdx}
@@ -616,34 +611,12 @@ export default function MyTeamAdvisor() {
                       </Space>
                     }
                   >
-                    <Row gutter={[16, 16]}>
-                      {team.players.map(player => (
-                        <Col xs={24} sm={12} md={8} lg={6} key={player.id}>
-                          <Card 
-                            size="small" 
-                            hoverable
-                            style={{ height: '100%' }}
-                          >
-                            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                              <Text strong style={{ fontSize: 14 }}>
-                                {player.web_name}
-                              </Text>
-                              <Text type="secondary" style={{ fontSize: 12 }}>
-                                {getPositionName(player.element_type)} • £{(player.now_cost / 10).toFixed(1)}m
-                              </Text>
-                              <Space split={<Text type="secondary">•</Text>} style={{ fontSize: 12 }}>
-                                <span>Total: {player.total_points}</span>
-                                <span>Form: {player.form}</span>
-                              </Space>
-                              <Space split={<Text type="secondary">•</Text>} style={{ fontSize: 12 }}>
-                                <span>Avg: {player.avgPoints}</span>
-                                <span>Med: {player.medianPoints}</span>
-                              </Space>
-                            </Space>
-                          </Card>
-                        </Col>
-                      ))}
-                    </Row>
+                    <StandardTable
+                      columns={getBestFixturesTableColumns()}
+                      dataSource={team.players}
+                      pagination={false}
+                      scroll={{ x: 600 }}
+                    />
                   </Card>
                 ))}
               </Space>
