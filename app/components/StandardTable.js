@@ -4,13 +4,18 @@ import { Table } from 'antd'
 
 /**
  * Standardized table component with consistent configuration
- * Used across all tables in the application
+ * Optimized for mobile with responsive pagination and scroll
  */
 export function StandardTable({ 
   columns, 
   dataSource, 
-  pagination = { pageSize: 10 },
-  scroll = { x: 1200 },
+  pagination = { 
+    pageSize: 10,
+    showSizeChanger: false,
+    responsive: true,
+    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`
+  },
+  scroll = { x: 800 },
   ...props 
 }) {
   return (
@@ -21,8 +26,8 @@ export function StandardTable({
       pagination={pagination}
       scroll={scroll}
       showSorterTooltip={false}
+      size="small"
       {...props}
     />
   )
 }
-

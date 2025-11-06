@@ -13,6 +13,7 @@ export default function ComparePlayer() {
 
   useEffect(() => {
     fetchPlayersData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchPlayersData = async () => {

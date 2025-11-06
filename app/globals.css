@@ -8,8 +8,192 @@
   --fpl-green: #00ff87;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+  
+  /* Reduce padding on mobile */
+  .ant-card {
+    margin-bottom: 12px !important;
+  }
+  
+  .ant-card-body {
+    padding: 12px !important;
+  }
+  
+  .ant-card-head {
+    padding: 8px 12px !important;
+    min-height: auto !important;
+  }
+  
+  .ant-card-head-title {
+    font-size: 16px !important;
+  }
+  
+  /* Make tabs more compact */
+  .ant-tabs-nav {
+    margin-bottom: 12px !important;
+  }
+  
+  .ant-tabs-tab {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+  
+  /* Better table scrolling on mobile */
+  .ant-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Adjust space components */
+  .ant-space-item {
+    margin-bottom: 8px !important;
+  }
+  
+  /* Better button spacing */
+  .ant-btn {
+    margin: 4px !important;
+  }
+  
+  /* Statistics on mobile */
+  .ant-statistic {
+    text-align: center;
+  }
+  
+  .ant-statistic-title {
+    font-size: 11px !important;
+  }
+  
+  .ant-statistic-content {
+    font-size: 18px !important;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .ant-card-body {
+    padding: 16px !important;
+  }
+}
+
+/* Touch-friendly elements */
+@media (hover: none) and (pointer: coarse) {
+  .ant-btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  .ant-dropdown-trigger {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+}
+
+/* Table optimizations */
+.ant-table {
+  font-size: 13px;
+}
+
+.ant-table-thead > tr > th {
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Tag improvements */
+.ant-tag {
+  font-size: 12px;
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+/* Badge improvements */
+.ant-badge {
+  font-size: 11px;
+}
+
+/* Tooltip improvements */
+.ant-tooltip-inner {
+  font-size: 12px;
+  max-width: 300px;
+}
+
+@media (max-width: 768px) {
+  .ant-tooltip-inner {
+    max-width: 200px;
+  }
+}
+
+/* Alert improvements */
+.ant-alert {
+  border-radius: 6px;
+}
+
+/* Loading states */
+.ant-spin-container {
+  min-height: 200px;
+}
+
+/* Smooth transitions */
+.ant-card,
+.ant-btn,
+.ant-table-tbody > tr > td {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Scrollbar styling for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Performance optimizations */
+.ant-table-wrapper {
+  will-change: scroll-position;
+}
+
+/* Print styles */
+@media print {
+  .ant-btn,
+  .ant-dropdown-trigger {
+    display: none !important;
+  }
 }
 
 @layer utilities {
@@ -29,4 +213,3 @@ body {
     @apply bg-red-100 text-red-800 border-red-300;
   }
 }
-

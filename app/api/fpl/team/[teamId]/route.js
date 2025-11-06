@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server'
 
+// Revalidate every 1 minute for team data
+export const revalidate = 60
+
 export async function GET(request, { params }) {
   try {
     const { teamId } = params
-    
+
     const response = await fetch(`https://fantasy.premierleague.com/api/entry/${teamId}/`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
+        'Accept': 'application/json',
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
         'Referer': 'https://fantasy.premierleague.com/',
@@ -15,9 +18,9 @@ export async function GET(request, { params }) {
         'Connection': 'keep-alive',
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Site': 'same-origin'
       },
-      cache: 'no-store',
+      next: { revalidate: 60 } // Cache for 1 minute
     })
 
     if (!response.ok) {
@@ -26,13 +29,16 @@ export async function GET(request, { params }) {
 
     const data = await response.json()
     
-    return NextResponse.json(data)
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+      }
+    })
   } catch (error) {
-    console.error('Error fetching team data:', error)
+    console.error('Team API error:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch team data', message: error.message },
+      { error: 'Failed to fetch team data' },
       { status: 500 }
     )
   }
 }
-

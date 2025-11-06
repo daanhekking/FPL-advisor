@@ -1,127 +1,180 @@
-# FPL Advisor
+# FPL Advisor 🏆
 
-Your personalized Fantasy Premier League AI advisor - get tailored recommendations for your specific team!
+A personalized Fantasy Premier League advisor that analyzes your team and provides tailored transfer recommendations.
 
-## 🚀 Features
+## Features
 
-### 1. My Team - AI-Powered Analysis
-- View your complete FPL squad with detailed stats
-- **AI Captain Recommendations** based on form and fixtures
-- **Transfer Suggestions** highlighting weak players and top targets
-- Real-time team value, bank balance, and free transfers
-- Overall rank tracking and gameweek performance
+- 📊 **Personalized Analysis**: Get insights specific to your FPL team
+- 🔄 **Smart Transfer Suggestions**: AI-powered recommendations based on form, fixtures, and budget
+- 📅 **Fixture Analysis**: Color-coded difficulty ratings for upcoming matches
+- 💰 **Budget Management**: Cumulative budget calculations for multiple transfers
+- 🎲 **Randomize Options**: Explore different transfer combinations
+- 📱 **Fully Responsive**: Optimized for mobile, tablet, and desktop
+- 🌙 **Dark Mode**: Easy on the eyes with Ant Design dark theme
+- ⚡ **Fast Performance**: Server-side caching and React optimizations
 
-### 2. Fixtures
-- Shows fixture difficulty ratings for all Premier League teams
-- Displays upcoming fixtures (next 5 gameweeks)
-- Color-coded difficulty ratings (green = easy, red = hard)
-- Sorted by average fixture difficulty
-
-### 3. Player Comparison
-- Compare two players side-by-side
-- Auto-complete suggestions as you type player names
-- Comprehensive stats including:
-  - Total points, goals and assists
-  - Form, price, minutes played
-  - Clean sheets and bonus points
-  - Selection percentage
-- Quick comparison summary showing who's better in key metrics
-
-### 4. Settings
-- Save your FPL Team ID for persistent tracking
-- Easy team switching for managing multiple accounts
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
-- **Styling**: Tailwind CSS
-- **Language**: JavaScript
-- **Data Source**: Official FPL Public API
-- **Package Manager**: npm
+- **UI Library**: Ant Design
+- **Styling**: Tailwind CSS + Custom CSS
+- **Font**: Geist Sans (Vercel)
+- **Data Source**: Official FPL API
+- **Deployment**: Optimized for Vercel
 
-## 📦 Installation
+## Getting Started
 
-1. The project is already set up in this directory
-2. Dependencies have been installed
+### Prerequisites
 
-## 🎮 Running the App
+- Node.js 18+ installed
+- npm or yarn
 
-The development server is currently running. Open your browser and navigate to:
-
-```
-http://localhost:3000
-```
-
-To start the server manually in the future:
+### Installation
 
 ```bash
+# Clone the repository
+git clone <your-repo-url>
+cd "FPL Advisor"
+
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
 ```
 
-## 📁 Project Structure
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Configuration
+
+The app uses two hardcoded team IDs by default:
+- Team 1: `7535279` (DH-to-the-moon)
+- Team 2: `5385777` (Caribbean Chaos)
+
+To use your own team:
+1. Get your FPL team ID from your team URL: `https://fantasy.premierleague.com/entry/YOUR_TEAM_ID/event/XX`
+2. Update `DEFAULT_TEAM_ID` in `app/page.js`
+3. Update `MY_TEAMS` array with your team details
+
+## Deployment to Vercel
+
+### Quick Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone)
+
+### Manual Deploy
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+
+# Deploy to production
+vercel --prod
+```
+
+### Via GitHub
+
+1. Push your code to GitHub
+2. Go to [vercel.com](https://vercel.com)
+3. Click "New Project"
+4. Import your GitHub repository
+5. Click "Deploy" (Vercel auto-detects Next.js)
+
+## API Routes
+
+The app includes serverless API routes that act as proxies to the FPL API:
+
+- `/api/fpl/bootstrap` - Player and team data (cached 5 min)
+- `/api/fpl/fixtures` - Fixture list (cached 2 min)
+- `/api/fpl/team/[teamId]` - Team info (cached 1 min)
+- `/api/fpl/team/[teamId]/picks` - Squad picks (cached 1 min)
+
+All routes include proper caching headers for optimal performance.
+
+## Performance Optimizations
+
+### Implemented Optimizations
+
+✅ **React Optimizations**
+- `useMemo` for expensive calculations
+- `useCallback` for memoized handlers
+- Proper dependency arrays
+- Lazy loading where applicable
+
+✅ **API Optimizations**
+- Server-side caching with revalidation
+- Stale-while-revalidate strategy
+- Proper HTTP headers
+
+✅ **Mobile Optimizations**
+- Responsive breakpoints (xs, sm, md, lg)
+- Touch-friendly button sizes (44px min)
+- Optimized font sizes with `clamp()`
+- Reduced padding on small screens
+- Horizontal scroll for tables
+
+✅ **Next.js Best Practices**
+- Server Components where possible
+- Client Components only when needed
+- Proper metadata configuration
+- Optimized font loading with `next/font`
+
+## Project Structure
 
 ```
 FPL Advisor/
 ├── app/
-│   ├── page.js              # My Team - AI Advisor (Home page)
-│   ├── api/
-│   │   └── fpl/            # API proxy routes for FPL data
-│   ├── fixtures/
-│   │   └── page.js          # Fixtures analysis page
-│   ├── compare/
-│   │   └── page.js          # Player comparison page
-│   ├── settings/
-│   │   └── page.js          # Settings page (Team ID management)
-│   ├── layout.js            # Root layout with navigation
-│   └── globals.css          # Global styles and Tailwind
+│   ├── api/fpl/              # API proxy routes
+│   ├── components/           # Reusable components
+│   │   ├── FixtureChips.js   # Fixture display
+│   │   ├── PlayerInfo.js     # Player details
+│   │   ├── StandardTable.js  # Table wrapper
+│   │   ├── TableColumns.js   # Column definitions
+│   │   └── TransferCard.js   # Transfer suggestions
+│   ├── utils/                # Helper functions
+│   ├── globals.css           # Global styles
+│   ├── layout.js             # Root layout
+│   ├── page.js               # Main page
+│   └── providers.js          # Theme provider
+├── public/                   # Static assets
+├── .gitignore
 ├── package.json
-├── tailwind.config.js
-├── next.config.js
 └── README.md
 ```
 
-## 🎨 Design Features
+## Browser Support
 
-- Modern, clean interface inspired by FPL's color scheme
-- Purple (#37003c) and pink (#ff2882) brand colors
-- Responsive design that works on mobile, tablet, and desktop
-- Smooth transitions and hover effects
-- Loading states and error handling
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+- Mobile browsers (iOS Safari, Chrome Mobile)
 
-## 🎯 Getting Started
+## Performance Metrics
 
-1. Open the app at `http://localhost:3000`
-2. Click the ⚙️ Settings icon in the navigation
-3. Enter your FPL Team ID (found in your FPL team URL)
-4. Click "Save Settings"
-5. Go to "My Team" to see your personalized analysis and recommendations!
+Target Lighthouse scores:
+- Performance: 90+
+- Accessibility: 95+
+- Best Practices: 95+
+- SEO: 100
 
-## 📊 Data Source
+## Contributing
 
-All data is fetched from the official FPL API via server-side proxy routes:
-- Bootstrap data (players, teams): `/api/fpl/bootstrap`
-- Fixtures: `/api/fpl/fixtures`
-- Team data: `/api/fpl/team/[teamId]`
-- Team picks: `/api/fpl/team/[teamId]/picks`
+This is a personal project, but suggestions and bug reports are welcome!
 
-No FPL authentication required - just your Team ID!
+## License
 
-## 🔮 Future Enhancements
+MIT
 
-Potential features for future versions:
-- Points predictions using machine learning
-- Historical performance charts and trends
-- Wildcard and chip planners
-- Price change predictions and alerts
-- Head-to-head league analysis
-- Differential picks finder
-- Expected goals (xG) and advanced metrics
+## Acknowledgments
 
-## 🤝 Contributing
+- Data provided by [Fantasy Premier League](https://fantasy.premierleague.com)
+- UI components by [Ant Design](https://ant.design)
+- Font by [Vercel](https://vercel.com/font)
 
-This is a local development project. Feel free to extend and customize!
+---
 
-## 📝 License
-
-This project is for personal use. FPL data is provided by the official Fantasy Premier League API.
-
+Built with ❤️ for FPL managers who want to beat Sheitlingthorp FC

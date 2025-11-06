@@ -65,9 +65,9 @@ export default function Settings() {
           <h3 className="text-lg font-semibold text-gray-900 mb-3">How to use FPL Advisor</h3>
           <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
             <li>Enter your FPL Team ID above and save</li>
-            <li>Go to "My Team" to see your squad and AI recommendations</li>
-            <li>Check "Fixtures" to plan for upcoming gameweeks</li>
-            <li>Use "Compare" to evaluate transfer options side-by-side</li>
+            <li>Go to &ldquo;My Team&rdquo; to see your squad and AI recommendations</li>
+            <li>Check &ldquo;Fixtures&rdquo; to plan for upcoming gameweeks</li>
+            <li>Use &ldquo;Compare&rdquo; to evaluate transfer options side-by-side</li>
           </ol>
         </div>
       </div>
