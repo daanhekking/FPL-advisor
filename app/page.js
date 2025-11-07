@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { 
   Layout, Tabs, Card, Button, Typography, 
-  Space, Statistic, Row, Col, Dropdown, Spin, Alert, Tag 
+  Space, Statistic, Row, Col, Dropdown, Spin, Alert, Tag, Modal 
 } from 'antd'
 import { 
   SwapOutlined, ReloadOutlined
@@ -52,7 +52,7 @@ const getPlayerFixtures = (playerId, players, teams, upcomingFixtures) => {
 }
 
 // Generate recommendations (optimized with memoization-friendly structure)
-const generateRecommendations = (picks, players, teams, fixtures, numTransfers, seed = 0) => {
+const generateRecommendations = (picks, players, teams, fixtures, numTransfers, seed = 0, fixtureWindow = 5) => {
   const myPlayerIds = picks.picks.map(p => p.element)
   const myPlayerData = myPlayerIds.map(id => {
     const player = players.find(p => p.id === id)
@@ -72,7 +72,7 @@ const generateRecommendations = (picks, players, teams, fixtures, numTransfers, 
     })
     .map(p => {
       const team = teams.find(t => t.id === p.team)
-      const fixtures = getPlayerFixtures(p.id, players, teams, upcomingFixtures)
+      const fixtures = getPlayerFixtures(p.id, players, teams, upcomingFixtures).slice(0, fixtureWindow)
       const avgDifficulty = fixtures.length > 0
         ? fixtures.reduce((sum, f) => sum + f.difficulty, 0) / fixtures.length
         : 3
@@ -90,7 +90,7 @@ const generateRecommendations = (picks, players, teams, fixtures, numTransfers, 
     })
     .map(p => {
       const team = teams.find(t => t.id === p.team)
-      const fixtures = getPlayerFixtures(p.id, players, teams, upcomingFixtures)
+      const fixtures = getPlayerFixtures(p.id, players, teams, upcomingFixtures).slice(0, fixtureWindow)
       
       const avgDifficulty = fixtures.length > 0
         ? fixtures.reduce((sum, f) => sum + f.difficulty, 0) / fixtures.length
@@ -191,6 +191,9 @@ export default function MyTeamAdvisor() {
   const [transfersToUse, setTransfersToUse] = useState(1)
   const [randomSeed, setRandomSeed] = useState(0)
   const [activeTab, setActiveTab] = useState('1')
+  const [myHistory, setMyHistory] = useState(null)
+  const [chipPlanModal, setChipPlanModal] = useState({ open: false, title: '', squad: [] })
+  const [fixturesToShow, setFixturesToShow] = useState(5)
 
   // Initialize team ID from localStorage
   useEffect(() => {
@@ -203,26 +206,28 @@ export default function MyTeamAdvisor() {
     if (!teamId) return
     
     const fetchAllData = async () => {
-      try {
-        setLoading(true)
+    try {
+      setLoading(true)
         setError(null)
         
-        const [bootstrapRes, teamRes, picksRes, fixturesRes] = await Promise.all([
+        const [bootstrapRes, teamRes, picksRes, fixturesRes, historyRes] = await Promise.all([
           fetch('/api/fpl/bootstrap'),
           fetch(`/api/fpl/team/${teamId}`),
           fetch(`/api/fpl/team/${teamId}/picks?gameweek=current`),
-          fetch('/api/fpl/fixtures')
+          fetch('/api/fpl/fixtures'),
+          fetch(`/api/fpl/team/${teamId}/history`)
         ])
         
-        if (!bootstrapRes.ok || !teamRes.ok || !picksRes.ok || !fixturesRes.ok) {
+        if (!bootstrapRes.ok || !teamRes.ok || !picksRes.ok || !fixturesRes.ok || !historyRes.ok) {
           throw new Error('Failed to fetch data from API')
         }
         
-        const [bootstrap, team, picks, fixturesData] = await Promise.all([
+        const [bootstrap, team, picks, fixturesData, history] = await Promise.all([
           bootstrapRes.json(),
           teamRes.json(),
           picksRes.json(),
-          fixturesRes.json()
+          fixturesRes.json(),
+          historyRes.json()
         ])
         
         setAllPlayers(bootstrap.elements)
@@ -230,6 +235,7 @@ export default function MyTeamAdvisor() {
         setMyTeam(team)
         setMyPicks(picks)
         setFixtures(fixturesData)
+        setMyHistory(history)
         setLoading(false)
       } catch (err) {
         console.error('Error fetching data:', err)
@@ -246,8 +252,16 @@ export default function MyTeamAdvisor() {
     if (!myPicks || allPlayers.length === 0 || allTeams.length === 0 || fixtures.length === 0) {
       return null
     }
-    return generateRecommendations(myPicks, allPlayers, allTeams, fixtures, transfersToUse, randomSeed)
-  }, [myPicks, allPlayers, allTeams, fixtures, transfersToUse, randomSeed])
+    return generateRecommendations(
+      myPicks,
+      allPlayers,
+      allTeams,
+      fixtures,
+      transfersToUse,
+      randomSeed,
+      fixturesToShow
+    )
+  }, [myPicks, allPlayers, allTeams, fixtures, transfersToUse, randomSeed, fixturesToShow])
 
   // Memoize squad data
   const myPlayerData = useMemo(() => {
@@ -291,6 +305,350 @@ export default function MyTeamAdvisor() {
   // Get overall points from FPL API (manager's total points for the season)
   const overallPoints = myTeam?.summary_overall_points || 0
 
+  const captainColumns = useMemo(() => {
+    const base = getTargetsTableColumns()
+    return [
+      ...base,
+      {
+        title: 'Captain Score',
+        dataIndex: 'captainScore',
+        key: 'captainScore',
+        width: 120,
+        sorter: (a, b) => (a.captainScore || 0) - (b.captainScore || 0),
+        render: (val) => (val !== undefined ? val.toFixed(1) : '—')
+      },
+    ]
+  }, [])
+
+  const captaincyOptions = useMemo(() => {
+    if (!recommendations || myPlayerData.length === 0) {
+      return { my: [], external: [] }
+    }
+
+    const scorePlayer = (player) => {
+      const form = parseFloat(player.form || 0)
+      const ppg = parseFloat(player.points_per_game || 0)
+      const avgDifficulty = player.avgDifficulty !== undefined ? player.avgDifficulty : (
+        player.fixtures && player.fixtures.length > 0
+          ? player.fixtures.reduce((sum, f) => sum + f.difficulty, 0) / player.fixtures.length
+          : 3
+      )
+      const totalPoints = player.total_points || 0
+      return form * 8 + ppg * 5 + (5 - avgDifficulty) * 4 + totalPoints / 10
+    }
+
+    const myOptions = myPlayerData
+      .filter(p => p.pick?.multiplier > 0)
+      .map(p => {
+        const avgDifficulty = p.avgDifficulty !== undefined ? p.avgDifficulty : (
+          p.fixtures && p.fixtures.length > 0
+            ? p.fixtures.reduce((sum, f) => sum + f.difficulty, 0) / p.fixtures.length
+            : 3
+        )
+        return {
+          ...p,
+          avgDifficulty,
+          captainScore: scorePlayer({ ...p, avgDifficulty })
+        }
+      })
+      .sort((a, b) => b.captainScore - a.captainScore)
+      .slice(0, 3)
+
+    const myIds = new Set(myPlayerData.map(p => p.id))
+    const externalOptions = recommendations.transferTargets
+      .filter(p => !myIds.has(p.id))
+      .map(p => ({
+        ...p,
+        captainScore: scorePlayer(p)
+      }))
+      .sort((a, b) => b.captainScore - a.captainScore)
+      .slice(0, 5)
+
+    return {
+      my: myOptions,
+      external: externalOptions
+    }
+  }, [recommendations, myPlayerData])
+
+  const positionLabels = useMemo(() => ({
+    1: 'Goalkeepers',
+    2: 'Defenders',
+    3: 'Midfielders',
+    4: 'Forwards',
+  }), [])
+
+  const groupedSquad = useMemo(() => {
+    if (myPlayerData.length === 0) return []
+
+    return Object.entries(positionLabels)
+      .map(([posId, label]) => {
+        const players = myPlayerData
+          .filter(player => player.element_type === Number(posId))
+          .slice()
+          .sort((a, b) => {
+            if (a.isBenched !== b.isBenched) {
+              return a.isBenched ? 1 : -1
+            }
+            const posA = a.pick?.position || 99
+            const posB = b.pick?.position || 99
+            return posA - posB
+          })
+
+        return {
+          id: Number(posId),
+          label,
+          players,
+        }
+      })
+      .filter(group => group.players.length > 0)
+  }, [myPlayerData, positionLabels])
+
+  const chipSuggestions = useMemo(() => {
+    if (!myHistory || !recommendations) return []
+
+    const currentEvent = myPicks?.entry_history?.event || 0
+    const wildcardMax = currentEvent >= 20 ? 2 : 1
+
+    const CHIP_DEFS = [
+      { id: 'wildcard', label: 'Wildcard', max: wildcardMax },
+      { id: 'freehit', label: 'Free Hit', max: 1 },
+      { id: 'benchboost', label: 'Bench Boost', max: 1 },
+      { id: 'triplecaptain', label: 'Triple Captain', max: 1 },
+    ]
+
+    const usedChips = myHistory?.chips || []
+    const usageCount = usedChips.reduce((acc, chip) => {
+      acc[chip.name] = (acc[chip.name] || 0) + 1
+      return acc
+    }, {})
+
+    const benchPlayers = myPlayerData.filter(p => p.isBenched)
+    const benchPpg = benchPlayers.length
+      ? benchPlayers.reduce((sum, p) => sum + parseFloat(p.points_per_game || 0), 0) / benchPlayers.length
+      : 0
+    const benchAvgDiff = benchPlayers.length
+      ? benchPlayers.reduce((sum, p) => sum + (p.avgDifficulty || 3), 0) / benchPlayers.length
+      : 3
+
+    const weakCount = recommendations.weakPlayers.length
+    const topCaptain = captaincyOptions.my[0]
+
+    const suggestions = []
+
+    CHIP_DEFS.forEach(chip => {
+      const used = usageCount[chip.id] || 0
+      const remaining = chip.max - used
+      if (remaining <= 0) return
+
+      let recommendation = 'Hold for now'
+      let plan = 'Monitor upcoming fixtures and double gameweeks before deploying.'
+
+      switch (chip.id) {
+        case 'wildcard': {
+          if (weakCount >= 5) {
+            recommendation = 'Consider using soon'
+            plan = 'Several weak spots detected. Restructure squad to target in-form options with strong fixture runs.'
+          } else {
+            plan = 'Team core looks stable. Save wildcard for major fixture swings or blank gameweeks.'
+          }
+          break
+        }
+        case 'benchboost': {
+          if (benchPlayers.length >= 4 && benchPpg >= 3.5 && benchAvgDiff <= 2.7) {
+            recommendation = 'Good window approaching'
+            plan = 'Bench has playable options with friendly fixtures. Plan to align with a double gameweek if possible.'
+          } else {
+            plan = 'Strengthen bench first—look for four starters with favourable fixtures before activating.'
+          }
+          break
+        }
+        case 'triplecaptain': {
+          if (topCaptain && topCaptain.captainScore >= 60 && topCaptain.avgDifficulty <= 2.5) {
+            recommendation = 'Candidate identified'
+            plan = `Consider using on ${topCaptain.web_name} while form and fixtures align. Ideally pair with a double gameweek.`
+          } else {
+            plan = 'Wait for a premium attacker with a double gameweek and elite form before deploying.'
+          }
+          break
+        }
+        case 'freehit': {
+          if (weakCount >= 6) {
+            recommendation = 'Potential use soon'
+            plan = 'Upcoming gameweek may be difficult to navigate. Monitor blanks/doubles; deploy when your squad lacks coverage.'
+          } else {
+            plan = 'Reserve for blank or double gameweeks when coverage is limited.'
+          }
+          break
+        }
+        default:
+          break
+      }
+
+      const label = chip.max > 1
+        ? `${chip.label} (${remaining} left)`
+        : chip.label
+
+      suggestions.push({
+        id: `${chip.id}-${remaining}`,
+        chipId: chip.id,
+        chip: label,
+        status: `${remaining} available`,
+        recommendation,
+        plan,
+        showAction: chip.id === 'wildcard' || chip.id === 'freehit',
+      })
+    })
+
+    return suggestions
+  }, [myHistory, recommendations, myPlayerData, captaincyOptions, myPicks])
+
+  const buildChipSquad = useCallback((chipId) => {
+    if (!recommendations) return []
+
+    const desiredCounts = { 1: 2, 2: 5, 3: 5, 4: 3 }
+
+    const getScore = (player) => {
+      const form = parseFloat(player.form || 0)
+      const ppg = parseFloat(player.points_per_game || 0)
+      const avgDifficulty = player.avgDifficulty !== undefined
+        ? player.avgDifficulty
+        : (player.fixtures && player.fixtures.length > 0
+          ? player.fixtures.reduce((sum, f) => sum + f.difficulty, 0) / player.fixtures.length
+          : 3)
+      const totalPoints = player.total_points || 0
+      return form * 8 + ppg * 5 + (5 - avgDifficulty) * 4 + totalPoints / 10
+    }
+
+    const poolMap = new Map()
+    recommendations.transferTargets.forEach(player => {
+      if (player) poolMap.set(player.id, { ...player })
+    })
+    myPlayerData.forEach(player => {
+      if (player && !poolMap.has(player.id)) {
+        poolMap.set(player.id, { ...player })
+      }
+    })
+
+    const available = Array.from(poolMap.values())
+    const byPosition = { 1: [], 2: [], 3: [], 4: [] }
+    available.forEach(player => {
+      if (byPosition[player.element_type]) {
+        byPosition[player.element_type].push(player)
+      }
+    })
+    Object.values(byPosition).forEach(list => {
+      list.sort((a, b) => getScore(b) - getScore(a))
+    })
+
+    const selected = []
+    const selectedByPos = { 1: [], 2: [], 3: [], 4: [] }
+
+    Object.entries(desiredCounts).forEach(([pos, count]) => {
+      const list = byPosition[pos] || []
+      for (let i = 0; i < count && i < list.length; i++) {
+        const player = { ...list[i] }
+        selected.push(player)
+        selectedByPos[pos].push(player)
+      }
+    })
+
+    if (selected.length < 15) {
+      const remaining = available
+        .filter(p => !selected.some(sel => sel.id === p.id))
+        .sort((a, b) => getScore(b) - getScore(a))
+
+      for (let i = 0; i < remaining.length && selected.length < 15; i++) {
+        const player = { ...remaining[i] }
+        selected.push(player)
+        const pos = player.element_type
+        if (!selectedByPos[pos]) selectedByPos[pos] = []
+        selectedByPos[pos].push(player)
+      }
+    }
+
+    const applyRoles = (list, starters) => {
+      list.forEach((player, idx) => {
+        const isStarter = idx < starters
+        player.role = isStarter ? 'Starter' : 'Bench'
+        player.isBenched = !isStarter
+      })
+    }
+
+    applyRoles(selectedByPos[1] || [], 1)
+    applyRoles(selectedByPos[2] || [], 3)
+    applyRoles(selectedByPos[3] || [], 4)
+    applyRoles(selectedByPos[4] || [], 3)
+
+    const starters = selected.filter(player => !player.isBenched)
+    const bench = selected.filter(player => player.isBenched)
+
+    return [...starters, ...bench]
+  }, [recommendations, myPlayerData])
+
+  const handleShowChipPlan = useCallback((chipId, chipLabel) => {
+    const squad = buildChipSquad(chipId)
+    setChipPlanModal({
+      open: true,
+      title: `${chipLabel} - Suggested Squad`,
+      squad,
+    })
+  }, [buildChipSquad])
+
+  const handleCloseChipPlan = useCallback(() => {
+    setChipPlanModal(prev => ({ ...prev, open: false }))
+  }, [])
+
+  const chipColumns = useMemo(() => [
+    {
+      title: 'Chip',
+      dataIndex: 'chip',
+      key: 'chip',
+      width: 160,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 140,
+    },
+    {
+      title: 'Recommendation',
+      dataIndex: 'recommendation',
+      key: 'recommendation',
+      width: 260,
+    },
+    {
+      title: 'Suggested Plan',
+      dataIndex: 'plan',
+      key: 'plan',
+      width: 320,
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 140,
+      render: (_, record) =>
+        record.showAction ? (
+          <Button size="small" onClick={() => handleShowChipPlan(record.chipId, record.chip)}>
+            Show anyway
+          </Button>
+        ) : null,
+    },
+  ], [handleShowChipPlan])
+
+  const chipPlanColumns = useMemo(() => {
+    const baseColumns = getSquadTableColumns()
+    return [
+      {
+        title: 'Role',
+        dataIndex: 'role',
+        key: 'role',
+        width: 120,
+      },
+      ...baseColumns,
+    ]
+  }, [])
+
   // Calculate best fixtures by team
   const bestFixtureTeams = useMemo(() => {
     if (allPlayers.length === 0 || allTeams.length === 0 || fixtures.length === 0) {
@@ -298,12 +656,12 @@ export default function MyTeamAdvisor() {
     }
 
     const upcomingFixtures = fixtures.filter(f => !f.finished_provisional).slice(0, 50)
-    
+
     // Calculate average difficulty for each team
     const teamFixtureData = allTeams.map(team => {
       const teamFixtures = upcomingFixtures
         .filter(f => f.team_h === team.id || f.team_a === team.id)
-        .slice(0, 5)
+        .slice(0, fixturesToShow)
         .map(f => {
           const isHome = f.team_h === team.id
           const opponentId = isHome ? f.team_a : f.team_h
@@ -344,7 +702,7 @@ export default function MyTeamAdvisor() {
       .filter(t => t.fixtures.length > 0)
       .sort((a, b) => a.avgDifficulty - b.avgDifficulty)
       .slice(0, 10) // Top 10 teams with best fixtures
-  }, [allPlayers, allTeams, fixtures])
+  }, [allPlayers, allTeams, fixtures, fixturesToShow])
 
   // Memoized handlers
   const handleRetry = useCallback(() => {
@@ -418,7 +776,7 @@ export default function MyTeamAdvisor() {
   }
 
   // No data state
-  if (!myTeam || !myPicks || !recommendations) {
+  if (!myTeam || !myPicks || !recommendations || !myHistory) {
     return (
       <Layout style={{ minHeight: '100vh' }}>
         <Content style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
@@ -569,18 +927,33 @@ export default function MyTeamAdvisor() {
             </Tabs.TabPane>
 
             <Tabs.TabPane tab="👥 Your Squad" key="2">
-              <Card>
-                <StandardTable
-                  columns={getSquadTableColumns()}
-                  dataSource={myPlayerData}
-                  pagination={false}
-                  scroll={{ x: 900 }}
-                />
-              </Card>
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                {groupedSquad.map(group => (
+                  <Card key={group.id} title={group.label}>
+                    <StandardTable
+                      columns={getSquadTableColumns()}
+                      dataSource={group.players}
+                      pagination={false}
+                      scroll={{ x: 900 }}
+                    />
+                  </Card>
+                ))}
+              </Space>
             </Tabs.TabPane>
 
             <Tabs.TabPane tab="📅 Best Fixtures" key="3">
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Card
+                  title="Fixture Window"
+                  extra={
+                    <Space>
+                      <Text>Fixtures:</Text>
+                      <Button onClick={() => setFixturesToShow(prev => Math.max(1, prev - 1))}>-</Button>
+                      <Text strong>{fixturesToShow}</Text>
+                      <Button onClick={() => setFixturesToShow(prev => Math.min(10, prev + 1))}>+</Button>
+                    </Space>
+                  }
+                />
                 {bestFixtureTeams.map((team, idx) => (
                   <Card 
                     key={team.id}
@@ -621,9 +994,58 @@ export default function MyTeamAdvisor() {
                 ))}
               </Space>
             </Tabs.TabPane>
+
+            <Tabs.TabPane tab="🧢 Captaincy" key="4">
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Card title="Top Captain Picks from Your Squad">
+                  <StandardTable
+                    columns={captainColumns}
+                    dataSource={captaincyOptions.my}
+                    pagination={false}
+                    scroll={{ x: 900 }}
+                  />
+                </Card>
+                <Card title="Top Differential Captain Picks (Not in Your Squad)">
+                  <StandardTable
+                    columns={captainColumns}
+                    dataSource={captaincyOptions.external}
+                    pagination={false}
+                    scroll={{ x: 900 }}
+                  />
+                </Card>
+              </Space>
+            </Tabs.TabPane>
+
+            <Tabs.TabPane tab="🎯 Chip Strategy" key="5">
+              <Card title="Chip Usage Recommendations">
+                <StandardTable
+                  columns={chipColumns}
+                  dataSource={chipSuggestions}
+                  pagination={false}
+                  rowKey="id"
+                  locale={{
+                    emptyText: 'All chips have been used.'
+                  }}
+                />
+              </Card>
+            </Tabs.TabPane>
           </Tabs>
         </Space>
       </Content>
+      <Modal
+        title={chipPlanModal.title}
+        open={chipPlanModal.open}
+        onCancel={handleCloseChipPlan}
+        footer={null}
+        width={960}
+      >
+        <StandardTable
+          columns={chipPlanColumns}
+          dataSource={chipPlanModal.squad}
+          pagination={false}
+          scroll={{ x: 900 }}
+        />
+      </Modal>
     </Layout>
   )
 }
