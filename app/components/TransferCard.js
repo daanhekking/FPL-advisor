@@ -24,7 +24,7 @@ export function TransferCard({ transfer, allTeams }) {
           closable
         />
       )}
-      
+
       {/* Desktop Layout */}
       <Row gutter={16} align="middle" className="transfer-desktop">
         {/* Player OUT */}
@@ -35,8 +35,13 @@ export function TransferCard({ transfer, allTeams }) {
               {transfer.out.web_name}
             </Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {allTeams.find(t => t.id === transfer.out.team)?.short_name} • Form {transfer.out.form}
+              {allTeams.find(t => t.id === transfer.out.team)?.short_name}
             </Text>
+            <Space size="small" wrap>
+              <Text style={{ fontSize: 11 }}>Form: <strong>{transfer.out.form?.toFixed(1) || '0.0'}</strong></Text>
+              <Text style={{ fontSize: 11 }}>Pts: <strong>{transfer.out.totalPoints || 0}</strong></Text>
+              <Text style={{ fontSize: 11 }}>L3: <strong>{transfer.out.last3Points?.toFixed(0) || '0'}</strong></Text>
+            </Space>
             <FixtureChips fixtures={transfer.out.fixtures} maxShow={5} showTooltip={true} />
             <Text strong>{formatPrice(transfer.out.now_cost)}</Text>
           </Space>
@@ -55,8 +60,13 @@ export function TransferCard({ transfer, allTeams }) {
               {transfer.in.web_name}
             </Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {transfer.in.team.short_name} • Form {transfer.in.form}
+              {transfer.in.team.short_name}
             </Text>
+            <Space size="small" wrap>
+              <Text style={{ fontSize: 11 }}>Form: <strong>{transfer.in.form?.toFixed(1) || '0.0'}</strong></Text>
+              <Text style={{ fontSize: 11 }}>Pts: <strong>{transfer.in.totalPoints || 0}</strong></Text>
+              <Text style={{ fontSize: 11 }}>L3: <strong>{transfer.in.last3Points?.toFixed(0) || '0'}</strong></Text>
+            </Space>
             <FixtureChips fixtures={transfer.in.fixtures} maxShow={5} showTooltip={true} />
             <Text strong>{formatPrice(transfer.in.now_cost)}</Text>
             {transfer.priceDiff !== 0 && (
@@ -76,8 +86,13 @@ export function TransferCard({ transfer, allTeams }) {
             <Badge count="OUT" style={{ backgroundColor: '#ff4d4f' }} />
             <Text strong style={{ fontSize: 16 }}>{transfer.out.web_name}</Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {allTeams.find(t => t.id === transfer.out.team)?.short_name} • Form {transfer.out.form}
+              {allTeams.find(t => t.id === transfer.out.team)?.short_name}
             </Text>
+            <Space size="small" wrap>
+              <Text style={{ fontSize: 11 }}>Form: <strong>{transfer.out.form?.toFixed(1) || '0.0'}</strong></Text>
+              <Text style={{ fontSize: 11 }}>Pts: <strong>{transfer.out.totalPoints || 0}</strong></Text>
+              <Text style={{ fontSize: 11 }}>L3: <strong>{transfer.out.last3Points?.toFixed(0) || '0'}</strong></Text>
+            </Space>
             <FixtureChips fixtures={transfer.out.fixtures} maxShow={5} showTooltip={true} />
             <Text strong>{formatPrice(transfer.out.now_cost)}</Text>
           </Space>
@@ -91,8 +106,13 @@ export function TransferCard({ transfer, allTeams }) {
             <Badge count="IN" style={{ backgroundColor: '#52c41a' }} />
             <Text strong style={{ fontSize: 16 }}>{transfer.in.web_name}</Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {transfer.in.team.short_name} • Form {transfer.in.form}
+              {transfer.in.team.short_name}
             </Text>
+            <Space size="small" wrap>
+              <Text style={{ fontSize: 11 }}>Form: <strong>{transfer.in.form?.toFixed(1) || '0.0'}</strong></Text>
+              <Text style={{ fontSize: 11 }}>Pts: <strong>{transfer.in.totalPoints || 0}</strong></Text>
+              <Text style={{ fontSize: 11 }}>L3: <strong>{transfer.in.last3Points?.toFixed(0) || '0'}</strong></Text>
+            </Space>
             <FixtureChips fixtures={transfer.in.fixtures} maxShow={5} showTooltip={true} />
             <Space>
               <Text strong>{formatPrice(transfer.in.now_cost)}</Text>

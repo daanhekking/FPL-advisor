@@ -1,0 +1,55 @@
+# Project Rules
+
+## Project Info
+- **Name**: FPL Advisor
+- **Description**: A Fantasy Premier League assistant for analyzing teams and suggesting transfers.
+- **Tech Stack**:
+  - **Framework**: Next.js 14 (App Router)
+  - **Language**: JavaScript
+  - **UI Library**: Ant Design (antd)
+  - **Styling**: Ant Design (CSS-in-JS) / CSS Modules
+  - **Icons**: @ant-design/icons
+
+## Coding Guidelines
+
+### General
+- Use **functional components** with hooks.
+- Prefer **async/await** for asynchronous operations.
+- Use `const` for all variable declarations; avoid `var`.
+- Ensure code is clean, readable, and well-commented where complex.
+
+### Next.js (App Router)
+- Use the `app/` directory structure.
+- Distinguish between Server Components (default) and Client Components (`'use client'`).
+- Use `next/image` for optimized image loading.
+- Use `next/link` for client-side navigation.
+- **Data Fetching**:
+  - **CRITICAL**: For FPL API data (fixtures, picks, history), **DISABLE CACHING**.
+  - Use `{ cache: 'no-store' }` in `fetch` calls.
+  - Set `export const revalidate = 0` in API routes.
+  - Set `Cache-Control: no-store, max-age=0` headers in API responses.
+
+### UI & Styling
+- **Primary Component Library**: Use **Ant Design** (`antd`) for all UI components (Tables, Tabs, Cards, Modals, Spinners, Layouts).
+- **Layout & Spacing**: Use Ant Design's `Space`, `Row`, `Col`, and `Flex` components for layout. Avoid utility classes like Tailwind.
+- **Colors**: Use the FPL theme colors:
+  - Purple: `#37003c`
+  - Pink: `#ff2882`
+  - Green: `#00ff87`
+
+### FPL Domain Logic
+- **Gameweeks**: Always ensure logic accounts for the *current* gameweek.
+- **Transfers**: Recommendations should consider budget, form, and upcoming fixtures.
+- **Fixtures**: Use the `difficulty` rating (1-5) to assess match toughness.
+
+## File Structure
+- `app/`: Application routes and pages.
+- `app/api/`: Backend API routes (proxies to FPL API).
+- `app/components/`: Reusable UI components.
+- `app/utils/`: Helper functions and logic.
+
+## Common Tasks
+- **Adding a new feature**:
+  1. Create a new component in `app/components/` if reusable.
+  2. Update `app/page.js` or create a new route in `app/`.
+  3. Ensure responsive design using Ant Design Grid (`Row`, `Col`) and `xs`, `sm`, `md`, `lg`, `xl` props.

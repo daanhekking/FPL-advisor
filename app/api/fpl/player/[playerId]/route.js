@@ -4,11 +4,6 @@ import https from 'https'
 // Revalidate every 0 seconds (always fresh)
 export const revalidate = 0
 
-// Create agent for SSL bypass (development only)
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false
-})
-
 // Simple fetch wrapper using node-fetch-like behavior
 async function fetchWithAgent(url, options = {}) {
   const https = await import('https')
@@ -60,38 +55,44 @@ async function fetchWithAgent(url, options = {}) {
   })
 }
 
-export async function GET() {
-  try {
-    const response = await fetchWithAgent('https://fantasy.premierleague.com/api/bootstrap-static/', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept': 'application/json'
-      },
-      timeout: 30000
-    })
+export async function GET(request, { params }) {
+    try {
+        const { playerId } = params
 
-    if (!response.ok) {
-      throw new Error(`FPL API returned ${response.status}`)
+        const response = await fetchWithAgent(
+            `https://fantasy.premierleague.com/api/element-summary/${playerId}/`,
+            {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+                    'Accept': 'application/json'
+                },
+                timeout: 5000
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error(`FPL API returned ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        return NextResponse.json(data, {
+            headers: {
+                'Cache-Control': 'no-store, max-age=0'
+            }
+        })
+    } catch (error) {
+        console.error('Player history API error:', error)
+        
+        return NextResponse.json({
+            error: error.message || 'Failed to fetch player history',
+            playerId: params.playerId,
+            timestamp: new Date().toISOString()
+        }, {
+            status: 500,
+            headers: {
+                'Cache-Control': 'no-store, max-age=0'
+            }
+        })
     }
-
-    const data = await response.json()
-
-    return NextResponse.json(data, {
-      headers: {
-        'Cache-Control': 'no-store, max-age=0'
-      }
-    })
-  } catch (error) {
-    console.error('Bootstrap API error:', error)
-    
-    return NextResponse.json({
-      error: error.message || 'Failed to fetch bootstrap data',
-      timestamp: new Date().toISOString()
-    }, {
-      status: 500,
-      headers: {
-        'Cache-Control': 'no-store, max-age=0'
-      }
-    })
-  }
 }
