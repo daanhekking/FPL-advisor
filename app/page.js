@@ -730,6 +730,135 @@ export default function MyTeamAdvisor() {
                             </div>
                           </div>
 
+                          {/* Explanations Section */}
+                          {recommendations && (
+                            <div style={{ marginBottom: 24 }}>
+                              {/* Transfer Recommendations Explanation */}
+                              {recommendations.suggestedTransfers && recommendations.suggestedTransfers.length > 0 && (
+                                <Alert
+                                  type="info"
+                                  showIcon
+                                  style={{ marginBottom: 16 }}
+                                  message="Transfer Recommendations"
+                                  description={
+                                    <Space direction="vertical" style={{ width: '100%' }}>
+                                      {recommendations.suggestedTransfers.map((transfer, idx) => {
+                                        const outForm = parseFloat(transfer.out.form || 0);
+                                        const inForm = parseFloat(transfer.in.form || 0);
+                                        const outFixtures = transfer.out.fixtures || [];
+                                        const inFixtures = transfer.in.fixtures || [];
+                                        const outNextDiff = outFixtures[0]?.difficulty || 3;
+                                        const inNextDiff = inFixtures[0]?.difficulty || 3;
+                                        const outPrice = transfer.out.now_cost / 10;
+                                        const inPrice = transfer.in.now_cost / 10;
+                                        
+                                        let reason = '';
+                                        
+                                        // Determine sell reason
+                                        if (transfer.out.chance_of_playing_next_round !== null && transfer.out.chance_of_playing_next_round < 75) {
+                                          reason += `Selling ${transfer.out.web_name} due to injury/availability concerns (${transfer.out.chance_of_playing_next_round}% fit). `;
+                                        } else if (outForm < 3.0) {
+                                          reason += `Selling ${transfer.out.web_name} due to poor form (${outForm.toFixed(1)}). `;
+                                        } else if (outNextDiff >= 4) {
+                                          reason += `Selling ${transfer.out.web_name} due to difficult upcoming fixtures (avg difficulty ${outNextDiff}). `;
+                                        } else {
+                                          reason += `Selling ${transfer.out.web_name} to upgrade. `;
+                                        }
+                                        
+                                        // Determine buy reason
+                                        reason += `Buying ${transfer.in.web_name} because: `;
+                                        const buyReasons = [];
+                                        if (inForm >= 5.0) buyReasons.push(`excellent form (${inForm.toFixed(1)})`);
+                                        else if (inForm >= 4.0) buyReasons.push(`good form (${inForm.toFixed(1)})`);
+                                        
+                                        if (inNextDiff <= 2) buyReasons.push(`easy fixtures ahead`);
+                                        else if (inNextDiff === 3) buyReasons.push(`moderate fixtures`);
+                                        
+                                        if (transfer.in.total_points > transfer.out.total_points + 20) {
+                                          buyReasons.push(`higher season points (${transfer.in.total_points} vs ${transfer.out.total_points})`);
+                                        }
+                                        
+                                        if (inPrice < outPrice) {
+                                          buyReasons.push(`saves £${(outPrice - inPrice).toFixed(1)}m`);
+                                        } else if (inPrice > outPrice) {
+                                          buyReasons.push(`costs £${(inPrice - outPrice).toFixed(1)}m more`);
+                                        }
+                                        
+                                        reason += buyReasons.join(', ') + '.';
+                                        
+                                        return (
+                                          <div key={idx}>
+                                            <Text strong>{idx + 1}. </Text>
+                                            <Text>{reason}</Text>
+                                          </div>
+                                        );
+                                      })}
+                                    </Space>
+                                  }
+                                />
+                              )}
+
+                              {/* Starting 11 Explanation */}
+                              {recommendations.starting11 && recommendations.starting11.length > 0 && (
+                                <Alert
+                                  type="success"
+                                  showIcon
+                                  style={{ marginBottom: 16 }}
+                                  message={`Starting 11 Formation: ${recommendations.formation.DEF}-${recommendations.formation.MID}-${recommendations.formation.FWD}`}
+                                  description={
+                                    <div>
+                                      <Text>
+                                        This formation was selected because it maximizes your team&apos;s overall score. 
+                                        The starting 11 includes your best {11} players based on form, fixtures, and availability. 
+                                        {recommendations.starting11.some(p => {
+                                          const chanceOfPlaying = p.chance_of_playing_next_round;
+                                          return chanceOfPlaying !== null && chanceOfPlaying >= 75 && chanceOfPlaying < 100;
+                                        }) && ' Note: Some players have uncertain availability but are still selected as your best options.'}
+                                      </Text>
+                                    </div>
+                                  }
+                                />
+                              )}
+
+                              {/* Bench Explanation */}
+                              {recommendations.bench && recommendations.bench.length > 0 && (
+                                <Alert
+                                  type="default"
+                                  showIcon
+                                  message="Bench Players"
+                                  description={
+                                    <div>
+                                      <Text>
+                                        Players on the bench: {recommendations.bench.map(p => p.web_name).join(', ')}. 
+                                        {' '}
+                                        {(() => {
+                                          const benchReasons = [];
+                                          const hasInjured = recommendations.bench.some(p => 
+                                            p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 75
+                                          );
+                                          const hasPoorForm = recommendations.bench.some(p => parseFloat(p.form || 0) < 3.0);
+                                          const hasBadFixtures = recommendations.bench.some(p => {
+                                            const fixtures = p.fixtures || [];
+                                            return fixtures[0]?.difficulty >= 4;
+                                          });
+                                          
+                                          if (hasInjured) benchReasons.push('injury concerns');
+                                          if (hasPoorForm) benchReasons.push('poor form');
+                                          if (hasBadFixtures) benchReasons.push('difficult fixtures');
+                                          
+                                          if (benchReasons.length > 0) {
+                                            return `Benched due to: ${benchReasons.join(', ')}.`;
+                                          }
+                                          return 'Benched as starting 11 provides better overall score.';
+                                        })()}
+                                      </Text>
+                                    </div>
+                                  }
+                                />
+                              )}
+                            </div>
+                          )}
+
                           {/* Squad Section */}
                           <div>
                             
@@ -748,6 +877,46 @@ export default function MyTeamAdvisor() {
                                     return ''
                                   }}
                                 />
+                                {/* GK Explanation */}
+                                <div style={{ marginTop: 12, padding: '8px 12px', backgroundColor: '#f5f5f5', borderRadius: 4 }}>
+                                  <Text type="secondary" style={{ fontSize: 13 }}>
+                                    {(() => {
+                                      const starting = recommendedSquadGrouped.GKP.find(p => !p.isBenched && !p.isBeingSold);
+                                      const benched = recommendedSquadGrouped.GKP.find(p => p.isBenched || (!starting && p));
+                                      
+                                      if (!starting) return 'No goalkeeper information available.';
+                                      
+                                      const startingFixDiff = starting.fixtures?.[0]?.difficulty || 3;
+                                      const startingForm = parseFloat(starting.form || 0);
+                                      
+                                      let explanation = `Starting ${starting.web_name}`;
+                                      const reasons = [];
+                                      
+                                      if (starting.isNew) reasons.push('new transfer in');
+                                      if (startingForm >= 4.0) reasons.push(`good form (${startingForm.toFixed(1)})`);
+                                      if (startingFixDiff <= 2) reasons.push('easy fixture');
+                                      if (reasons.length === 0) reasons.push('best available option');
+                                      
+                                      explanation += ` - ${reasons.join(', ')}.`;
+                                      
+                                      if (benched && benched !== starting) {
+                                        explanation += ` Benching ${benched.web_name}`;
+                                        const benchReasons = [];
+                                        const benchFixDiff = benched.fixtures?.[0]?.difficulty || 3;
+                                        const benchForm = parseFloat(benched.form || 0);
+                                        
+                                        if (benched.isBeingSold) benchReasons.push('being transferred out');
+                                        else if (benchForm < startingForm) benchReasons.push('lower form');
+                                        else if (benchFixDiff > startingFixDiff) benchReasons.push('harder fixture');
+                                        else benchReasons.push('rotation keeper');
+                                        
+                                        explanation += ` - ${benchReasons.join(', ')}.`;
+                                      }
+                                      
+                                      return explanation;
+                                    })()}
+                                  </Text>
+                                </div>
                               </div>
                             )}
 
@@ -766,6 +935,53 @@ export default function MyTeamAdvisor() {
                                     return ''
                                   }}
                                 />
+                                {/* Defenders Explanation */}
+                                <div style={{ marginTop: 12, padding: '8px 12px', backgroundColor: '#f5f5f5', borderRadius: 4 }}>
+                                  <Text type="secondary" style={{ fontSize: 13 }}>
+                                    {(() => {
+                                      const starting = recommendedSquadGrouped.DEF.filter(p => !p.isBenched && !p.isBeingSold);
+                                      const benched = recommendedSquadGrouped.DEF.filter(p => p.isBenched && !p.isBeingSold);
+                                      const beingSold = recommendedSquadGrouped.DEF.filter(p => p.isBeingSold);
+                                      
+                                      let explanation = '';
+                                      
+                                      // Starting defenders
+                                      if (starting.length > 0) {
+                                        explanation += `Starting ${starting.length} defender${starting.length > 1 ? 's' : ''}: ${starting.map(p => p.web_name).join(', ')}. `;
+                                        
+                                        const hasNewTransfers = starting.some(p => p.isNew);
+                                        const hasEasyFixtures = starting.some(p => p.fixtures?.[0]?.difficulty <= 2);
+                                        const hasGoodForm = starting.some(p => parseFloat(p.form || 0) >= 4.0);
+                                        
+                                        const reasons = [];
+                                        if (hasNewTransfers) reasons.push('includes new signings');
+                                        if (hasEasyFixtures) reasons.push('favorable fixtures');
+                                        if (hasGoodForm) reasons.push('good form');
+                                        
+                                        if (reasons.length > 0) explanation += `Selected for ${reasons.join(' and ')}. `;
+                                      }
+                                      
+                                      // Benched defenders
+                                      if (benched.length > 0) {
+                                        explanation += `Benched ${benched.length}: ${benched.map(p => p.web_name).join(', ')}. `;
+                                        
+                                        const reasons = [];
+                                        if (benched.some(p => parseFloat(p.form || 0) < 3.0)) reasons.push('poor form');
+                                        if (benched.some(p => p.fixtures?.[0]?.difficulty >= 4)) reasons.push('difficult fixtures');
+                                        if (benched.some(p => p.minutes < 300)) reasons.push('limited playing time');
+                                        
+                                        if (reasons.length > 0) explanation += `Reason: ${reasons.join(', ')}.`;
+                                      }
+                                      
+                                      // Being sold
+                                      if (beingSold.length > 0) {
+                                        explanation += ` Transferring out: ${beingSold.map(p => p.web_name).join(', ')}.`;
+                                      }
+                                      
+                                      return explanation || 'Defender selection optimized for this gameweek.';
+                                    })()}
+                                  </Text>
+                                </div>
                               </div>
                             )}
 
@@ -784,6 +1000,55 @@ export default function MyTeamAdvisor() {
                                     return ''
                                   }}
                                 />
+                                {/* Midfielders Explanation */}
+                                <div style={{ marginTop: 12, padding: '8px 12px', backgroundColor: '#f5f5f5', borderRadius: 4 }}>
+                                  <Text type="secondary" style={{ fontSize: 13 }}>
+                                    {(() => {
+                                      const starting = recommendedSquadGrouped.MID.filter(p => !p.isBenched && !p.isBeingSold);
+                                      const benched = recommendedSquadGrouped.MID.filter(p => p.isBenched && !p.isBeingSold);
+                                      const beingSold = recommendedSquadGrouped.MID.filter(p => p.isBeingSold);
+                                      
+                                      let explanation = '';
+                                      
+                                      // Starting midfielders
+                                      if (starting.length > 0) {
+                                        explanation += `Starting ${starting.length} midfielder${starting.length > 1 ? 's' : ''}: ${starting.map(p => p.web_name).join(', ')}. `;
+                                        
+                                        const topScorer = starting.reduce((best, p) => 
+                                          (!best || (p.total_points || 0) > (best.total_points || 0)) ? p : best
+                                        , null);
+                                        
+                                        if (topScorer) {
+                                          explanation += `${topScorer.web_name} leads with ${topScorer.total_points} points this season. `;
+                                        }
+                                        
+                                        const hasNewTransfers = starting.some(p => p.isNew);
+                                        if (hasNewTransfers) {
+                                          const newPlayers = starting.filter(p => p.isNew);
+                                          explanation += `New addition${newPlayers.length > 1 ? 's' : ''}: ${newPlayers.map(p => p.web_name).join(', ')}. `;
+                                        }
+                                      }
+                                      
+                                      // Benched midfielders
+                                      if (benched.length > 0) {
+                                        explanation += `Benched: ${benched.map(p => p.web_name).join(', ')} - `;
+                                        
+                                        const benchedReasons = benched.map(p => {
+                                          const form = parseFloat(p.form || 0);
+                                          const fixDiff = p.fixtures?.[0]?.difficulty || 3;
+                                          
+                                          if (form < 3.0) return 'poor form';
+                                          if (fixDiff >= 4) return 'hard fixture';
+                                          return 'squad rotation';
+                                        });
+                                        
+                                        explanation += benchedReasons[0] + '.';
+                                      }
+                                      
+                                      return explanation || 'Midfielder selection optimized for this gameweek.';
+                                    })()}
+                                  </Text>
+                                </div>
                               </div>
                             )}
 
@@ -802,6 +1067,59 @@ export default function MyTeamAdvisor() {
                                     return ''
                                   }}
                                 />
+                                {/* Forwards Explanation */}
+                                <div style={{ marginTop: 12, padding: '8px 12px', backgroundColor: '#f5f5f5', borderRadius: 4 }}>
+                                  <Text type="secondary" style={{ fontSize: 13 }}>
+                                    {(() => {
+                                      const starting = recommendedSquadGrouped.FWD.filter(p => !p.isBenched && !p.isBeingSold);
+                                      const benched = recommendedSquadGrouped.FWD.filter(p => p.isBenched && !p.isBeingSold);
+                                      const beingSold = recommendedSquadGrouped.FWD.filter(p => p.isBeingSold);
+                                      
+                                      let explanation = '';
+                                      
+                                      // Starting forwards
+                                      if (starting.length > 0) {
+                                        explanation += `Starting ${starting.length} forward${starting.length > 1 ? 's' : ''}: ${starting.map(p => p.web_name).join(', ')}. `;
+                                        
+                                        const eliteForward = starting.find(p => (p.total_points || 0) > 100);
+                                        if (eliteForward) {
+                                          explanation += `${eliteForward.web_name} is a premium pick with ${eliteForward.total_points} points. `;
+                                        }
+                                        
+                                        const hasNewTransfers = starting.some(p => p.isNew);
+                                        if (hasNewTransfers) {
+                                          const newPlayers = starting.filter(p => p.isNew);
+                                          explanation += `New signing${newPlayers.length > 1 ? 's' : ''}: ${newPlayers.map(p => p.web_name).join(', ')} with promising fixtures. `;
+                                        }
+                                      }
+                                      
+                                      // Benched forwards
+                                      if (benched.length > 0) {
+                                        explanation += `Benched: ${benched.map(p => p.web_name).join(', ')} - `;
+                                        
+                                        const benchedReasons = benched.map(p => {
+                                          const form = parseFloat(p.form || 0);
+                                          const fixDiff = p.fixtures?.[0]?.difficulty || 3;
+                                          const minutes = p.minutes || 0;
+                                          
+                                          if (minutes < 200) return 'limited minutes';
+                                          if (form < 2.5) return 'poor form';
+                                          if (fixDiff >= 4) return 'hard fixture';
+                                          return 'better options available';
+                                        });
+                                        
+                                        explanation += benchedReasons[0] + '.';
+                                      }
+                                      
+                                      // Being sold
+                                      if (beingSold.length > 0) {
+                                        explanation += ` Transferring out ${beingSold.map(p => p.web_name).join(', ')} to improve the squad.`;
+                                      }
+                                      
+                                      return explanation || 'Forward selection optimized for this gameweek.';
+                                    })()}
+                                  </Text>
+                                </div>
                               </div>
                             )}
                           </div>
