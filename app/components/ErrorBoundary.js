@@ -69,7 +69,7 @@ export class ErrorBoundary extends React.Component {
                 <BugOutlined style={{ fontSize: 48, color: '#ff4d4f' }} />
                 <Title level={2}>Something went wrong</Title>
                 <Text type="secondary">
-                  The application encountered an unexpected error. Don't worry, your data is safe.
+                  The application encountered an unexpected error. Don&apos;t worry, your data is safe.
                 </Text>
               </div>
 

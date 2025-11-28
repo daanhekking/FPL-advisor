@@ -37,7 +37,7 @@ export default function AlgorithmSetupPage() {
             <DatabaseOutlined /> Data Sources & APIs
           </Title>
           <Paragraph>
-            The AI Coach integrates multiple data sources to provide comprehensive analysis and recommendations. Here's an overview of where the data comes from:
+            The AI Coach integrates multiple data sources to provide comprehensive analysis and recommendations. Here&apos;s an overview of where the data comes from:
           </Paragraph>
 
           <Space direction="vertical" size="large" style={{ width: '100%', marginTop: '16px' }}>
@@ -284,13 +284,13 @@ export default function AlgorithmSetupPage() {
                   <strong>New Player Must Start:</strong> The incoming player must be good enough to make your starting 11, otherwise the transfer is not made.
                 </List.Item>
                 <List.Item>
-                  <strong>Score Improvement:</strong> The transfer must improve your starting 11's overall score, unless replacing an injured starter.
+                  <strong>Score Improvement:</strong> The transfer must improve your starting 11&apos;s overall score, unless replacing an injured starter.
                 </List.Item>
                 <List.Item>
                   <strong>Budget Constraint:</strong> The new player must be affordable with your available budget plus the sale price of the outgoing player.
                 </List.Item>
                 <List.Item>
-                  <strong>Fixture Difficulty Rule:</strong> Players with moderate fixtures (3) receive a 30% penalty unless they're in the top 10. Players with hard fixtures (4-5) receive a 60% penalty unless they're in the top 20. Elite players (Salah, Haaland, etc.) perform regardless of opposition.
+                  <strong>Fixture Difficulty Rule:</strong> Players with moderate fixtures (3) receive a 30% penalty unless they&apos;re in the top 10. Players with hard fixtures (4-5) receive a 60% penalty unless they&apos;re in the top 20. Elite players (Salah, Haaland, etc.) perform regardless of opposition.
                 </List.Item>
               </List>
             </div>
@@ -310,7 +310,7 @@ export default function AlgorithmSetupPage() {
             <TrophyOutlined /> Captaincy Recommendations
           </Title>
           <Paragraph>
-            Choosing the right captain can double your highest-scoring player's points. The algorithm uses a specialized scoring system for captaincy that differs from general team selection.
+            Choosing the right captain can double your highest-scoring player&apos;s points. The algorithm uses a specialized scoring system for captaincy that differs from general team selection.
           </Paragraph>
           
           <Alert
@@ -404,7 +404,7 @@ export default function AlgorithmSetupPage() {
                     </Col>
                   </Row>
                   <Text strong style={{ display: 'block', marginTop: '12px', color: '#52c41a' }}>
-                    Result: Salah becomes captain despite Haaland having better form, because Haaland's fixture is too difficult (4)!
+                    Result: Salah becomes captain despite Haaland having better form, because Haaland&apos;s fixture is too difficult (4)!
                   </Text>
                 </div>
               }
@@ -415,7 +415,7 @@ export default function AlgorithmSetupPage() {
             <div>
               <Text strong style={{ fontSize: '14px' }}>Pro Tip:</Text>
               <Paragraph style={{ marginTop: '8px', marginBottom: '0' }}>
-                The algorithm <strong>only considers players with easy fixtures (1-2 difficulty)</strong> for captaincy. This means even elite players like Haaland or Salah won't be selected as captain if they face a tough opponent that week. The system prioritizes <strong>safe, high-probability returns</strong> over risky captaincy choices. If no player has an easy fixture (rare), it will fall back to the best player regardless of fixture.
+                The algorithm <strong>only considers players with easy fixtures (1-2 difficulty)</strong> for captaincy. This means even elite players like Haaland or Salah won&apos;t be selected as captain if they face a tough opponent that week. The system prioritizes <strong>safe, high-probability returns</strong> over risky captaincy choices. If no player has an easy fixture (rare), it will fall back to the best player regardless of fixture.
               </Paragraph>
             </div>
           </Space>
