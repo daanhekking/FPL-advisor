@@ -1,12 +1,7 @@
 import { getPlayerFixtures } from './fpl-service'
 import { selectOptimalStarting11, evaluateTransfer } from './team-selection-service'
 
-// Placeholder for Sentiment/Scout data integration
-// In the future, these will be passed in or fetched
-const MOCK_SENTIMENT = {}
-const MOCK_SCOUT_PICKS = new Set()
-
-export const calculateHybridScore = (player, fixtures, sentimentData = MOCK_SENTIMENT, scoutPicks = MOCK_SCOUT_PICKS) => {
+export const calculateHybridScore = (player, fixtures) => {
     // Injury/Availability Check (Must pass first)
     // 75%+ chance: Full consideration
     // 50-74%: Reduced consideration (50% penalty)

@@ -1,12 +1,12 @@
-# FPL Advisor - Debugging Guide
+# FPL Advisor - Troubleshooting Guide
 
-This guide will help you troubleshoot and fix issues when the application gets stuck in a loading or error state.
+This guide will help you troubleshoot and fix issues when the application encounters errors or unexpected behavior.
 
 ## 🐛 Debug Tools Overview
 
-The application now includes comprehensive debugging tools to help you identify and fix issues quickly.
+The application includes comprehensive debugging tools to help you identify and fix issues quickly.
 
-### 1. Debug Panel (Floating Bug Button)
+### Debug Panel (Floating Bug Button)
 
 **Location:** Bottom-right corner of the screen (🐛 icon)
 
@@ -33,9 +33,9 @@ The application now includes comprehensive debugging tools to help you identify 
 - Red badge with number = shows count of errors
 - No badge = no errors detected
 
-### 2. Enhanced Error Messages
+### Enhanced Error Messages
 
-The application now provides specific error messages instead of generic failures:
+The application provides specific error messages instead of generic failures:
 - "Bootstrap data failed" - Problem loading player/team data
 - "Team data failed" - Problem loading your team information
 - "Fixtures data failed" - Problem loading fixture information
@@ -43,7 +43,7 @@ The application now provides specific error messages instead of generic failures
 - "Team history failed" - Problem loading gameweek history
 - "Request timed out" - Request took too long (>20 seconds)
 
-### 3. Automatic Logging
+### Automatic Logging
 
 All API calls are automatically logged with:
 - Request URL and method

@@ -1,6 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { 
+  Card, Typography, Tag, Space, Row, Col, 
+  Spin, Alert, Button, Layout 
+} from 'antd'
+
+const { Title, Text } = Typography
+const { Content } = Layout
 
 export default function Fixtures() {
   const [teams, setTeams] = useState([])
@@ -77,93 +84,106 @@ export default function Fixtures() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#37003c]"></div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <Spin size="large" tip="Loading fixtures..." />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        <p className="font-bold mb-2">Error</p>
-        <p>{error}</p>
-        <button 
-          onClick={fetchFixturesData}
-          className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition"
-        >
-          Retry
-        </button>
-      </div>
+      <Alert
+        type="error"
+        message="Error"
+        description={error}
+        action={
+          <Button size="small" danger onClick={fetchFixturesData}>
+            Retry
+          </Button>
+        }
+      />
     )
   }
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-gray-900">Fixture Difficulty</h2>
-        <p className="text-gray-600 mt-2">Upcoming fixtures for all Premier League teams (sorted by difficulty)</p>
-        <div className="mt-4 flex gap-4 text-sm">
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded difficulty-1"></span> Easy
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded difficulty-3"></span> Medium
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded difficulty-5"></span> Hard
-          </span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {teams.map((team) => (
-          <div
-            key={team.id}
-            className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
-          >
-            <div className="bg-[#37003c] text-white px-6 py-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-lg font-bold">{team.name}</h3>
-                  <p className="text-sm opacity-80">{team.shortName}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs opacity-80">Avg Difficulty</p>
-                  <p className="text-2xl font-bold">{team.avgDifficulty}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="space-y-3">
-                {team.fixtures.map((fixture, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 rounded border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-gray-500 w-8">
-                        GW{fixture.event}
-                      </span>
-                      <span className="font-medium text-gray-900">
-                        {fixture.isHome ? 'vs' : '@'} {fixture.opponent}
-                      </span>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getDifficultyColor(fixture.difficulty)}`}>
-                      {fixture.difficulty}
-                    </span>
-                  </div>
-                ))}
-                {team.fixtures.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">No upcoming fixtures</p>
-                )}
-              </div>
-            </div>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Content className="p-4 md:p-8 max-w-7xl mx-auto w-full">
+        <div style={{ marginBottom: 24 }}>
+          <Title level={2}>Fixture Difficulty</Title>
+          <Text type="secondary">
+            Upcoming fixtures for all Premier League teams (sorted by difficulty)
+          </Text>
+          <div style={{ marginTop: 16 }}>
+            <Space>
+              <Tag color="success">Easy</Tag>
+              <Tag color="warning">Medium</Tag>
+              <Tag color="error">Hard</Tag>
+            </Space>
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+
+        <Row gutter={[16, 16]}>
+          {teams.map((team) => (
+            <Col xs={24} lg={12} key={team.id}>
+              <Card>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: 16
+                }}>
+                  <div>
+                    <Title level={4} style={{ margin: 0 }}>{team.name}</Title>
+                    <Text type="secondary">{team.shortName}</Text>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+                      Avg Difficulty
+                    </Text>
+                    <Text strong style={{ fontSize: 24 }}>
+                      {team.avgDifficulty}
+                    </Text>
+                  </div>
+                </div>
+
+                <Space direction="vertical" style={{ width: '100%' }} size="small">
+                  {team.fixtures.map((fixture, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        borderRadius: 6
+                      }}
+                    >
+                      <Space>
+                        <Text type="secondary" style={{ minWidth: 40 }}>
+                          GW{fixture.event}
+                        </Text>
+                        <Text strong>
+                          {fixture.isHome ? 'vs' : '@'} {fixture.opponent}
+                        </Text>
+                      </Space>
+                      <Tag color={getDifficultyColor(fixture.difficulty)}>
+                        {fixture.difficulty}
+                      </Tag>
+                    </div>
+                  ))}
+                  {team.fixtures.length === 0 && (
+                    <Text type="secondary" style={{ display: 'block', textAlign: 'center', padding: 24 }}>
+                      No upcoming fixtures
+                    </Text>
+                  )}
+                </Space>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Content>
+    </Layout>
   )
 }
 

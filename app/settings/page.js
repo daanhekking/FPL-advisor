@@ -16,7 +16,7 @@ const { Title, Paragraph, Text } = Typography
 
 export default function AlgorithmSetupPage() {
   return (
-    <Layout className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <Layout style={{ minHeight: '100vh' }}>
       <Content className="p-4 md:p-8 max-w-5xl mx-auto w-full">
         {/* Header */}
         <div className="mb-6">

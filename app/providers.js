@@ -10,8 +10,7 @@ export function Providers({ children }) {
         theme={{
           algorithm: theme.darkAlgorithm,
           token: {
-            colorPrimary: '#1677ff',
-            borderRadius: 6,
+            // Keep it simple - use Ant Design's defaults with minimal customization
             fontFamily: 'var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           },
         }}
