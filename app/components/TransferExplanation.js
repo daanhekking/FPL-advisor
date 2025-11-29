@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Collapse, Space, Typography, Tag, Card, Row, Col } from 'antd'
+import { Collapse, Space, Typography, Tag, Card, Row, Col, Divider } from 'antd'
 import {
   SwapOutlined,
   ArrowRightOutlined,
