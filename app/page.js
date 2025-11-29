@@ -219,6 +219,7 @@ export default function MyTeamAdvisor() {
                     <RecommendedTeamTab
                       recommendations={recommendations}
                       recommendedSquadGrouped={recommendedSquadGrouped}
+                      captaincyRecommendation={captaincyRecommendation}
                       loading={recommendationsLoading}
                     />
                   )

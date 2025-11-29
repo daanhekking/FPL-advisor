@@ -18,13 +18,41 @@ const { Text, Title } = Typography
  * 
  * @param {Object} recommendations - Recommendations data
  * @param {Object} recommendedSquadGrouped - Recommended squad grouped by position
+ * @param {Object} captaincyRecommendation - Captain and vice-captain recommendation
  * @param {boolean} loading - Loading state
  */
 export const RecommendedTeamTab = ({ 
   recommendations, 
   recommendedSquadGrouped, 
+  captaincyRecommendation,
   loading 
 }) => {
+  // Mark captain and vice-captain in squad data
+  const squadWithCaptaincy = React.useMemo(() => {
+    if (!captaincyRecommendation || !recommendedSquadGrouped) return recommendedSquadGrouped
+    
+    const captainId = captaincyRecommendation.captain?.id
+    const viceId = captaincyRecommendation.allPlayersScored?.[1]?.id
+    
+    const updatePlayers = (players) => {
+      return players.map(player => ({
+        ...player,
+        pick: {
+          ...player.pick,
+          is_captain: player.id === captainId,
+          is_vice_captain: player.id === viceId
+        }
+      }))
+    }
+    
+    return {
+      GKP: updatePlayers(recommendedSquadGrouped.GKP || []),
+      DEF: updatePlayers(recommendedSquadGrouped.DEF || []),
+      MID: updatePlayers(recommendedSquadGrouped.MID || []),
+      FWD: updatePlayers(recommendedSquadGrouped.FWD || [])
+    }
+  }, [recommendedSquadGrouped, captaincyRecommendation])
+  
   // Row className for styling transfers
   const getRowClassName = (record) => {
     if (record.isBeingSold) return 'transfer-out-row'
@@ -177,32 +205,32 @@ export const RecommendedTeamTab = ({
           {/* Goalkeepers */}
           <SquadSection
             title="Goalkeepers"
-            players={recommendedSquadGrouped.GKP}
-            explanation={generateGKPExplanation(recommendedSquadGrouped.GKP)}
+            players={squadWithCaptaincy.GKP}
+            explanation={generateGKPExplanation(squadWithCaptaincy.GKP)}
             rowClassName={getRowClassName}
           />
 
           {/* Defenders */}
           <SquadSection
             title="Defenders"
-            players={recommendedSquadGrouped.DEF}
-            explanation={generateOutfieldExplanation(recommendedSquadGrouped.DEF, 'Defenders')}
+            players={squadWithCaptaincy.DEF}
+            explanation={generateOutfieldExplanation(squadWithCaptaincy.DEF, 'Defenders')}
             rowClassName={getRowClassName}
           />
 
           {/* Midfielders */}
           <SquadSection
             title="Midfielders"
-            players={recommendedSquadGrouped.MID}
-            explanation={generateOutfieldExplanation(recommendedSquadGrouped.MID, 'Midfielders')}
+            players={squadWithCaptaincy.MID}
+            explanation={generateOutfieldExplanation(squadWithCaptaincy.MID, 'Midfielders')}
             rowClassName={getRowClassName}
           />
 
           {/* Forwards */}
           <SquadSection
             title="Forwards"
-            players={recommendedSquadGrouped.FWD}
-            explanation={generateOutfieldExplanation(recommendedSquadGrouped.FWD, 'Forwards')}
+            players={squadWithCaptaincy.FWD}
+            explanation={generateOutfieldExplanation(squadWithCaptaincy.FWD, 'Forwards')}
             rowClassName={getRowClassName}
           />
         </div>

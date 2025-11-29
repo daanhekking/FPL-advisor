@@ -277,9 +277,10 @@ export const useSquadData = (data, recommendations = null) => {
 
     return {
       captain: sortedPlayers[0],
+      vice: sortedPlayers[1] || sortedPlayers[0],
       allPlayersScored: sortedPlayers, // Include all players for captaincy analysis tab
       reasoning: sortedPlayers[0] ? 
-        `${sortedPlayers[0].web_name} (${sortedPlayers[0].captaincyScore.toFixed(0)} score) is recommended based on quality, form, and fixtures` 
+        `${sortedPlayers[0].web_name} (${sortedPlayers[0].captaincyScore.toFixed(0)} score) is recommended for captain, ${sortedPlayers[1]?.web_name} (${sortedPlayers[1]?.captaincyScore.toFixed(0)} score) for vice-captain` 
         : 'No captain recommendation available'
     }
   }, [recommendations, data])
