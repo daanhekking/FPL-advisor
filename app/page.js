@@ -7,7 +7,7 @@ import {
 } from 'antd'
 import {
   SwapOutlined, ReloadOutlined, DownOutlined,
-  RobotOutlined, SettingOutlined
+  RobotOutlined, SettingOutlined, TrophyOutlined
 } from '@ant-design/icons'
 import Link from 'next/link'
 
@@ -24,6 +24,7 @@ import { DebugPanel } from './components/DebugPanel'
 import { TeamStats } from './components/TeamStats'
 import { RecommendedTeamTab } from './components/RecommendedTeamTab'
 import { CurrentSquadTab } from './components/CurrentSquadTab'
+import { CaptaincyAnalysis } from './components/CaptaincyAnalysis'
 import {
   getTargetsTableColumns,
   getWeakPlayersTableColumns,
@@ -74,7 +75,8 @@ export default function MyTeamAdvisor() {
   const {
     mySquadDataGrouped,
     recommendedSquadGrouped,
-    bestFixturesData
+    bestFixturesData,
+    captaincyRecommendation
   } = useSquadData(data, recommendations)
 
   // Handlers
@@ -281,6 +283,20 @@ export default function MyTeamAdvisor() {
                   label: 'Chip Strategy',
                   children: (
                     <StrategyTimeline strategy={chipStrategy} />
+                  )
+                },
+                {
+                  key: '6',
+                  label: (
+                    <span>
+                      <TrophyOutlined /> Captaincy Analysis
+                    </span>
+                  ),
+                  children: (
+                    <CaptaincyAnalysis
+                      captaincyRecommendation={captaincyRecommendation}
+                      loading={recommendationsLoading}
+                    />
                   )
                 }
               ]}

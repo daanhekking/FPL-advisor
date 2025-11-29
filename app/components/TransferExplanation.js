@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Card, Space, Typography, Tag, Divider, Row, Col } from 'antd'
+import { Collapse, Space, Typography, Tag, Card, Row, Col } from 'antd'
 import {
   SwapOutlined,
   ArrowRightOutlined,
@@ -170,6 +170,7 @@ const renderPlayerCard = (playerData, type) => {
 /**
  * TransferExplanation Component
  * Renders a well-structured transfer recommendation with selling and buying analysis
+ * Collapsible by default to reduce clutter
  */
 export const TransferExplanation = ({ explanation, index }) => {
   if (!explanation) return null
@@ -179,71 +180,96 @@ export const TransferExplanation = ({ explanation, index }) => {
   // Fallback to simple rendering if parsing fails
   if (!sections.selling && !sections.buying) {
     return (
-      <Card size="small" style={{ marginBottom: 16 }}>
-        <Text type="secondary">{explanation}</Text>
-      </Card>
+      <Collapse
+        size="small"
+        style={{ marginBottom: 16 }}
+        items={[
+          {
+            key: '1',
+            label: (
+              <Space>
+                <SwapOutlined />
+                <Text strong>Transfer {index} - Analysis</Text>
+              </Space>
+            ),
+            children: <Text type="secondary">{explanation}</Text>
+          }
+        ]}
+      />
     )
   }
   
+  // Create a summary for the collapsed header
+  const sellingPlayer = sections.selling?.player || 'Player'
+  const buyingPlayer = sections.buying?.player || 'Player'
+  
   return (
-    <Card 
+    <Collapse
       size="small"
       style={{ marginBottom: 16 }}
-      title={
-        <Space>
-          <SwapOutlined style={{ color: '#1890ff' }} />
-          <Text strong>Transfer {index}</Text>
-        </Space>
-      }
-      styles={{ body: { padding: 16 } }}
-    >
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
-        {/* Player comparison */}
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
-            {renderPlayerCard(sections.selling, 'selling')}
-          </Col>
-          <Col xs={24} md={12}>
-            {renderPlayerCard(sections.buying, 'buying')}
-          </Col>
-        </Row>
-        
-        {/* Arrow indicator for mobile */}
-        <div style={{ textAlign: 'center', display: 'block' }}>
-          <ArrowRightOutlined 
-            style={{ 
-              fontSize: 24, 
-              color: '#1890ff',
-              transform: 'rotate(90deg)'
-            }} 
-            className="md:rotate-0"
-          />
-        </div>
-        
-        {/* Expected Impact */}
-        {sections.impact && (
-          <Card
-            size="small"
-            style={{ 
-              background: 'rgba(24, 144, 255, 0.05)',
-              borderColor: '#1890ff'
-            }}
-          >
+      items={[
+        {
+          key: '1',
+          label: (
             <Space>
-              <RiseOutlined style={{ color: '#1890ff', fontSize: 16 }} />
-              <div>
-                <Text type="secondary" strong style={{ fontSize: 12, display: 'block' }}>
-                  EXPECTED IMPACT
-                </Text>
-                <Text style={{ fontSize: 13 }}>
-                  {sections.impact}
-                </Text>
-              </div>
+              <SwapOutlined style={{ color: '#1890ff' }} />
+              <Text strong>Transfer {index}:</Text>
+              <Text type="secondary">{sellingPlayer}</Text>
+              <ArrowRightOutlined style={{ fontSize: 12 }} />
+              <Text type="secondary">{buyingPlayer}</Text>
             </Space>
-          </Card>
-        )}
-      </Space>
-    </Card>
+          ),
+          children: (
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              {/* Player comparison */}
+              <Row gutter={16}>
+                <Col xs={24} md={12}>
+                  {renderPlayerCard(sections.selling, 'selling')}
+                </Col>
+                <Col xs={24} md={12}>
+                  {renderPlayerCard(sections.buying, 'buying')}
+                </Col>
+              </Row>
+              
+              {/* Arrow indicator for mobile */}
+              <div style={{ textAlign: 'center', display: 'block' }}>
+                <ArrowRightOutlined 
+                  style={{ 
+                    fontSize: 24, 
+                    color: '#1890ff',
+                    transform: 'rotate(90deg)'
+                  }} 
+                  className="md:rotate-0"
+                />
+              </div>
+              
+              {/* Expected Impact */}
+              {sections.impact && (
+                <Card
+                  size="small"
+                  style={{ 
+                    background: 'rgba(24, 144, 255, 0.05)',
+                    borderColor: '#1890ff'
+                  }}
+                >
+                  <Space>
+                    <RiseOutlined style={{ color: '#1890ff', fontSize: 16 }} />
+                    <div>
+                      <Text type="secondary" strong style={{ fontSize: 12, display: 'block' }}>
+                        EXPECTED IMPACT
+                      </Text>
+                      <Text style={{ fontSize: 13 }}>
+                        {sections.impact}
+                      </Text>
+                    </div>
+                  </Space>
+                </Card>
+              )}
+            </Space>
+          )
+        }
+      ]}
+    />
   )
 }
 

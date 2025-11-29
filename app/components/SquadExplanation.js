@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Typography, Space, Divider, Tag, Card } from 'antd'
+import { Typography, Space, Divider, Tag, Collapse } from 'antd'
 import {
   TrophyOutlined,
   FireOutlined,
@@ -9,7 +9,8 @@ import {
   WarningOutlined,
   CheckCircleOutlined,
   SwapOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  InfoCircleOutlined
 } from '@ant-design/icons'
 
 const { Text, Paragraph } = Typography
@@ -214,6 +215,7 @@ const renderSection = (section, index) => {
 /**
  * SquadExplanation Component
  * Renders structured, well-formatted explanations for squad selections
+ * Collapsible by default to reduce clutter
  */
 export const SquadExplanation = ({ explanation }) => {
   if (!explanation) return null
@@ -222,29 +224,53 @@ export const SquadExplanation = ({ explanation }) => {
   
   if (!sections || sections.length === 0) {
     return (
-      <Card size="small" style={{ marginTop: 12 }}>
-        <Text type="secondary">{explanation}</Text>
-      </Card>
+      <Collapse
+        size="small"
+        style={{ marginTop: 12 }}
+        items={[
+          {
+            key: '1',
+            label: (
+              <Space>
+                <InfoCircleOutlined />
+                <Text>Analysis & Reasoning</Text>
+              </Space>
+            ),
+            children: <Text type="secondary">{explanation}</Text>
+          }
+        ]}
+      />
     )
   }
   
   return (
-    <Card 
-      size="small" 
+    <Collapse
+      size="small"
       style={{ marginTop: 12 }}
-      styles={{ body: { padding: 16 } }}
-    >
-      <Space direction="vertical" size={8} style={{ width: '100%' }}>
-        {sections.map((section, index) => (
-          <React.Fragment key={index}>
-            {renderSection(section, index)}
-            {index < sections.length - 1 && index < 3 && (
-              <Divider style={{ margin: '12px 0' }} />
-            )}
-          </React.Fragment>
-        ))}
-      </Space>
-    </Card>
+      items={[
+        {
+          key: '1',
+          label: (
+            <Space>
+              <InfoCircleOutlined />
+              <Text>Analysis & Reasoning</Text>
+            </Space>
+          ),
+          children: (
+            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+              {sections.map((section, index) => (
+                <React.Fragment key={index}>
+                  {renderSection(section, index)}
+                  {index < sections.length - 1 && index < 3 && (
+                    <Divider style={{ margin: '12px 0' }} />
+                  )}
+                </React.Fragment>
+              ))}
+            </Space>
+          )
+        }
+      ]}
+    />
   )
 }
 
