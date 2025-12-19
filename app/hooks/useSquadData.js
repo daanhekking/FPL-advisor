@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { getPlayerFixtures } from '../services/fpl-service'
+import { getPlayerPerformanceData } from '../services/unified-fpl-algorithm'
 
 /**
  * Custom hook to process and group squad data by position
@@ -19,7 +20,7 @@ export const useSquadData = (data, recommendations = null) => {
     }
 
     const upcomingFixtures = (data.fixtures || []).filter(f => !f.finished_provisional).slice(0, 50)
-    
+
     const players = data.myPicks.picks.map(pick => {
       const player = data.allPlayers.find(pl => pl.id === pick.element)
       if (!player) return null
@@ -67,96 +68,114 @@ export const useSquadData = (data, recommendations = null) => {
 
   // Recommended Squad (after transfers)
   const recommendedSquadGrouped = useMemo(() => {
-    if (!recommendations || !data || !data.myPicks || !recommendations.suggestedTransfers) {
+    if (!recommendations || !data || !data.myPicks) {
       return { GKP: [], DEF: [], MID: [], FWD: [] }
     }
 
     const upcomingFixtures = (data.fixtures || []).filter(f => !f.finished_provisional).slice(0, 50)
     const positionMap = { 1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD' }
-    
+
+    // Create a lookup for performance scores from the unified algorithm
+    const performanceScoreMap = {}
+
+    // Get scores from starting 11 (these have finalScore, rank, penaltyApplied)
+    if (recommendations.starting11) {
+      recommendations.starting11.forEach(player => {
+        performanceScoreMap[player.id] = {
+          finalScore: player.finalScore,
+          baseScore: player.baseScore,
+          rank: player.rank,
+          penaltyApplied: player.penaltyApplied,
+          isBenched: false
+        }
+      })
+    }
+
+    // Get scores from bench (these also have finalScore, rank, penaltyApplied)
+    if (recommendations.bench) {
+      recommendations.bench.forEach(player => {
+        performanceScoreMap[player.id] = {
+          finalScore: player.finalScore,
+          baseScore: player.baseScore,
+          rank: player.rank,
+          penaltyApplied: player.penaltyApplied,
+          isBenched: true
+        }
+      })
+    }
+
     // Get IDs of players being sold
-    const soldIds = new Set(recommendations.suggestedTransfers.map(t => t.out.id))
-    
-    // Get players being sold (marked for display)
-    const soldPlayers = data.myPicks.picks
-      .filter(pick => {
-        const player = data.allPlayers.find(pl => pl.id === pick.element)
-        return player && soldIds.has(player.id)
-      })
-      .map(pick => {
-        const player = data.allPlayers.find(pl => pl.id === pick.element)
-        const team = data.allTeams.find(t => t.id === player.team)
-        const fixtures = getPlayerFixtures(player.id, data.allPlayers, data.allTeams, upcomingFixtures).slice(0, 5)
-        const avgDifficulty = fixtures.length > 0
-          ? fixtures.reduce((sum, f) => sum + f.difficulty, 0) / fixtures.length
-          : 3
+    const soldIds = new Set((recommendations.suggestedTransfers || []).map(t => t.out.id))
 
-        return {
-          ...player,
-          pick,
-          team,
-          fixtures,
-          avgDifficulty,
-          isBenched: (pick.position || 0) > 11,
-          form: parseFloat(player.form || 0),
-          totalPoints: player.total_points || 0,
-          isBeingSold: true,
-          isNew: false
-        }
-      })
-    
-    // Get remaining players (not being sold)
-    const remainingPlayers = data.myPicks.picks
-      .filter(pick => {
-        const player = data.allPlayers.find(pl => pl.id === pick.element)
-        return player && !soldIds.has(player.id)
-      })
-      .map(pick => {
-        const player = data.allPlayers.find(pl => pl.id === pick.element)
-        const team = data.allTeams.find(t => t.id === player.team)
-        const fixtures = getPlayerFixtures(player.id, data.allPlayers, data.allTeams, upcomingFixtures).slice(0, 5)
-        const avgDifficulty = fixtures.length > 0
-          ? fixtures.reduce((sum, f) => sum + f.difficulty, 0) / fixtures.length
-          : 3
+    // Build the full squad (sold players + remaining players + incoming players)
+    const allPlayers = []
 
-        return {
-          ...player,
-          pick,
-          team,
-          fixtures,
-          avgDifficulty,
-          isBenched: (pick.position || 0) > 11,
-          form: parseFloat(player.form || 0),
-          totalPoints: player.total_points || 0,
-          isBeingSold: false,
-          isNew: false
-        }
-      })
-    
-    // Add incoming players
-    const incomingPlayers = recommendations.suggestedTransfers.map(t => {
-      const player = t.in
+    // Add all current players (both sold and remaining)
+    data.myPicks.picks.forEach(pick => {
+      const player = data.allPlayers.find(pl => pl.id === pick.element)
+      if (!player) return
+
+      const scoreData = performanceScoreMap[player.id] || {}
+      const isBeingSold = soldIds.has(player.id)
+
+      // Calculate fixtures and average difficulty
       const fixtures = getPlayerFixtures(player.id, data.allPlayers, data.allTeams, upcomingFixtures).slice(0, 5)
       const avgDifficulty = fixtures.length > 0
         ? fixtures.reduce((sum, f) => sum + f.difficulty, 0) / fixtures.length
         : 3
 
-      return {
+      allPlayers.push({
         ...player,
-        team: t.in.team,
+        pick,
+        team: data.allTeams.find(t => t.id === player.team),
         fixtures,
         avgDifficulty,
-        isBenched: false,
         form: parseFloat(player.form || 0),
         totalPoints: player.total_points || 0,
-        isBeingSold: false,
-        isNew: true
-      }
+        isBeingSold,
+        isNew: false,
+        isBenched: scoreData.isBenched || false,
+        // Add performance data from unified algorithm
+        finalScore: scoreData.finalScore || 0,
+        baseScore: scoreData.baseScore || 0,
+        rank: scoreData.rank,
+        penaltyApplied: scoreData.penaltyApplied,
+        performanceScore: scoreData.finalScore || 0 // For backwards compatibility
+      })
     })
-    
-    // Combine all players
-    const allPlayers = [...soldPlayers, ...remainingPlayers, ...incomingPlayers]
-    
+
+    // Add incoming players (from transfers)
+    if (recommendations.suggestedTransfers) {
+      recommendations.suggestedTransfers.forEach(t => {
+        const player = t.in
+        const scoreData = performanceScoreMap[player.id] || {}
+
+        // Calculate fixtures and average difficulty
+        const fixtures = getPlayerFixtures(player.id, data.allPlayers, data.allTeams, upcomingFixtures).slice(0, 5)
+        const avgDifficulty = fixtures.length > 0
+          ? fixtures.reduce((sum, f) => sum + f.difficulty, 0) / fixtures.length
+          : 3
+
+        allPlayers.push({
+          ...player,
+          team: data.allTeams.find(t => t.id === player.team),
+          fixtures,
+          avgDifficulty,
+          form: parseFloat(player.form || 0),
+          totalPoints: player.total_points || 0,
+          isBeingSold: false,
+          isNew: true,
+          isBenched: scoreData.isBenched || false,
+          // Add performance data from unified algorithm
+          finalScore: scoreData.finalScore || 0,
+          baseScore: scoreData.baseScore || 0,
+          rank: scoreData.rank,
+          penaltyApplied: scoreData.penaltyApplied,
+          performanceScore: scoreData.finalScore || 0
+        })
+      })
+    }
+
     // Group by position
     const grouped = { GKP: [], DEF: [], MID: [], FWD: [] }
 
@@ -165,124 +184,108 @@ export const useSquadData = (data, recommendations = null) => {
       grouped[position].push(player)
     })
 
-    // Sort each group: being sold first, then new, then remaining by form
+    // Sort each group: starting 11 first (by rank), then bench players
     Object.keys(grouped).forEach(position => {
       grouped[position].sort((a, b) => {
-        if (a.isBeingSold && !b.isBeingSold) return -1
-        if (!a.isBeingSold && b.isBeingSold) return 1
-        if (a.isNew && !b.isNew) return -1
-        if (!a.isNew && b.isNew) return 1
-        return b.form - a.form
+        // Starters before bench
+        if (!a.isBenched && b.isBenched) return -1
+        if (a.isBenched && !b.isBenched) return 1
+
+        // Within starters or bench, sort by rank (or finalScore if no rank)
+        if (a.rank && b.rank) return a.rank - b.rank
+        return (b.finalScore || 0) - (a.finalScore || 0)
       })
     })
 
     return grouped
   }, [recommendations, data])
 
-  // Best Fixtures Data
+  // Best Fixtures Data - grouped by team with top players
   const bestFixturesData = useMemo(() => {
     if (!data || !data.allPlayers || !data.fixtures) return []
 
     const upcomingFixtures = data.fixtures.filter(f => !f.finished_provisional).slice(0, 50)
-    
-    return data.allPlayers
-      .filter(p => p.minutes > 0)
+
+    // Get all players with their fixtures and AI performance score
+    const playersWithFixtures = data.allPlayers
+      .filter(p => p.minutes > 0) // Only players who have played
       .map(player => {
         const team = data.allTeams.find(t => t.id === player.team)
         const fixtures = getPlayerFixtures(player.id, data.allPlayers, data.allTeams, upcomingFixtures).slice(0, 5)
+
+        // Calculate AI Performance Score for Best Fixtures
+        const performanceData = getPlayerPerformanceData(player, fixtures)
+
         const avgDifficulty = fixtures.length > 0
           ? fixtures.reduce((sum, f) => sum + f.difficulty, 0) / fixtures.length
           : 5
 
         return {
           ...player,
+          ...performanceData, // This adds finalScore, baseScore, etc.
           team,
+          fixtures,
           avgDifficulty,
           form: parseFloat(player.form || 0),
-          totalPoints: player.total_points || 0
+          totalPoints: player.total_points || 0,
+          position: player.element_type === 1 ? 'GKP' :
+            player.element_type === 2 ? 'DEF' :
+              player.element_type === 3 ? 'MID' : 'FWD'
         }
       })
-      .filter(p => p.avgDifficulty <= 3.5)
-      .sort((a, b) => a.avgDifficulty - b.avgDifficulty)
-      .slice(0, 50)
+      .filter(p => p.avgDifficulty <= 3.5) // Only good fixtures
+
+    // Return all players sorted by team's average difficulty
+    return playersWithFixtures
+      .sort((a, b) => {
+        // Sort by avg difficulty first, then by the AI performance score
+        const diffDiff = a.avgDifficulty - b.avgDifficulty
+        if (Math.abs(diffDiff) > 0.1) return diffDiff
+        return (b.finalScore || 0) - (a.finalScore || 0)
+      })
   }, [data])
 
-  // Captaincy Recommendation
+  // Captaincy Recommendation (now comes from unified algorithm via recommendations)
   const captaincyRecommendation = useMemo(() => {
     if (!recommendations || !data) return null
 
-    const soldIds = new Set(recommendations.suggestedTransfers.map(t => t.out.id))
-    const currentSquad = data.myPicks.picks
-      .map(p => data.allPlayers.find(pl => pl.id === p.element))
-      .filter(p => p && !soldIds.has(p.id))
+    // The unified algorithm already calculated captain/vice in recommendations
+    if (recommendations.captain && recommendations.vice) {
+      // Add fixture rating for display
+      const captain = recommendations.captain
+      const vice = recommendations.vice
 
-    const incomingPlayers = recommendations.suggestedTransfers.map(t => t.in)
-    const finalSquad = [...currentSquad, ...incomingPlayers]
+      const captainFixtureRating = captain.nextFixture ?
+        (captain.difficulty <= 2 ? 'Excellent' :
+          captain.difficulty === 3 ? 'Good' :
+            captain.difficulty === 4 ? 'Tough' : 'Very Tough')
+        : 'Unknown'
 
-    const scoredSquad = finalSquad.map(p => {
-      const fixtures = getPlayerFixtures(p.id, data.allPlayers, data.allTeams, data.fixtures)
-      const nextFixture = fixtures[0]
-      
-      // Base score heavily weighted by total points (reflects overall quality)
-      let captaincyScore = (p.total_points || 0) * 3
-      
-      // Form is important but shouldn't override quality
-      captaincyScore += (parseFloat(p.form || 0) * 20)
-      
-      // Price indicates quality (premium players are premium for a reason)
-      const price = (p.now_cost || 0) / 10
-      captaincyScore += price * 15
-      
-      // Points per game (consistency metric)
-      const ppg = p.total_points && p.minutes > 0 
-        ? (p.total_points / (p.minutes / 90)) 
-        : 0
-      captaincyScore += ppg * 10
-      
-      // Fixture difficulty is a bonus/penalty, not a gatekeeper
-      if (nextFixture) {
-        if (nextFixture.difficulty === 1) captaincyScore += 40
-        else if (nextFixture.difficulty === 2) captaincyScore += 25
-        else if (nextFixture.difficulty === 3) captaincyScore += 5
-        else if (nextFixture.difficulty === 4) captaincyScore -= 15
-        else if (nextFixture.difficulty === 5) captaincyScore -= 30
-        
-        // Home advantage
-        if (nextFixture.isHome) captaincyScore += 8
+      const viceFixtureRating = vice.nextFixture ?
+        (vice.difficulty <= 2 ? 'Excellent' :
+          vice.difficulty === 3 ? 'Good' :
+            vice.difficulty === 4 ? 'Tough' : 'Very Tough')
+        : 'Unknown'
+
+      return {
+        captain: {
+          ...captain,
+          fixtureRating: captainFixtureRating,
+          captaincyScore: captain.finalScore // For backwards compatibility
+        },
+        vice: {
+          ...vice,
+          fixtureRating: viceFixtureRating,
+          captaincyScore: vice.finalScore
+        },
+        allPlayersScored: recommendations.allPlayersScored || [],
+        reasoning: recommendations.captaincyReasoning ||
+          `${captain.web_name} (${captain.finalScore?.toFixed(0)} score) is recommended for captain`
       }
-      
-      // Goals and assists (attacking threat)
-      const goals = p.goals_scored || 0
-      const assists = p.assists || 0
-      captaincyScore += (goals * 8) + (assists * 5)
-      
-      // Selected by % (ownership can indicate differential opportunity, but shouldn't be primary)
-      const selectedBy = parseFloat(p.selected_by_percent || 0)
-      if (selectedBy >= 50) captaincyScore += 10 // Template captain
-      
-      return { 
-        ...p, 
-        captaincyScore,
-        nextFixture,
-        fixtureRating: nextFixture ? 
-          (nextFixture.difficulty <= 2 ? 'Excellent' : 
-           nextFixture.difficulty === 3 ? 'Good' : 
-           nextFixture.difficulty === 4 ? 'Tough' : 'Very Tough') 
-          : 'Unknown'
-      }
-    })
-
-    // Sort ALL players by captaincy score (no artificial filtering)
-    const sortedPlayers = scoredSquad.sort((a, b) => b.captaincyScore - a.captaincyScore)
-
-    return {
-      captain: sortedPlayers[0],
-      vice: sortedPlayers[1] || sortedPlayers[0],
-      allPlayersScored: sortedPlayers, // Include all players for captaincy analysis tab
-      reasoning: sortedPlayers[0] ? 
-        `${sortedPlayers[0].web_name} (${sortedPlayers[0].captaincyScore.toFixed(0)} score) is recommended for captain, ${sortedPlayers[1]?.web_name} (${sortedPlayers[1]?.captaincyScore.toFixed(0)} score) for vice-captain` 
-        : 'No captain recommendation available'
     }
+
+    // Fallback: if for some reason captaincy data isn't in recommendations, return null
+    return null
   }, [recommendations, data])
 
   return {

@@ -18,16 +18,20 @@ export const useTeamData = (teamId) => {
   const [chipStrategy, setChipStrategy] = useState([])
   const [last3PointsData, setLast3PointsData] = useState({})
 
-  const loadData = async () => {
+  const loadData = async (signal) => {
     if (!teamId) return
 
     try {
       setLoading(true)
       setError(null)
+      // Reset previous team's data immediately to prevent stale data display
+      setData(null)
+      setChipStrategy([])
+      setLast3PointsData({})
 
       // Fetch FPL data with timeout
       const dataFetchPromise = fetchFPLData(teamId)
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Data fetch timeout')), 90000)
       )
 
@@ -43,15 +47,18 @@ export const useTeamData = (teamId) => {
         throw err
       }
 
+      // Check if this fetch was cancelled (user switched teams)
+      if (signal?.aborted) return
+
       setData(fplData)
       setLoading(false)
 
       // Background tasks (non-blocking)
-      
+
       // Generate chip strategy
       try {
         const strategy = generateChipStrategy(fplData.myHistory, fplData.myTeam, fplData.fixtures)
-        setChipStrategy(strategy)
+        if (!signal?.aborted) setChipStrategy(strategy)
       } catch (err) {
         console.warn('Error generating chip strategy:', err)
       }
@@ -65,34 +72,32 @@ export const useTeamData = (teamId) => {
         .map(p => p.id)
 
       const allRelevantIds = [...myPlayerIds, ...topTargetIds]
-      
+
       calculateLast3GameweeksPoints(allRelevantIds)
         .then((points) => {
-          setLast3PointsData(points)
+          if (!signal?.aborted) setLast3PointsData(points)
         })
         .catch(err => {
           console.warn('Failed to fetch last 3 gameweeks points:', err)
-          setLast3PointsData({})
+          if (!signal?.aborted) setLast3PointsData({})
         })
 
     } catch (err) {
       console.error('Error loading data:', err)
-      setError(`Failed to load team data: ${err.message || 'Unknown error'}`)
-      setLoading(false)
+      if (!signal?.aborted) {
+        setError(`Failed to load team data: ${err.message || 'Unknown error'}`)
+        setLoading(false)
+      }
     }
   }
 
   useEffect(() => {
-    let cancelled = false
+    const abortController = new AbortController()
 
-    const load = async () => {
-      await loadData()
-    }
-
-    load()
+    loadData(abortController.signal)
 
     return () => {
-      cancelled = true
+      abortController.abort()
     }
   }, [teamId])
 

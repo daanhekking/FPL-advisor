@@ -23,9 +23,9 @@ export const formatPPG = (ppg) => {
  * Format average points per 90 minutes
  */
 export const calculateAvgPoints = (totalPoints, minutes) => {
-  if (!minutes || minutes === 0) return '0.0'
+  if (!minutes || minutes === 0 || totalPoints === null || totalPoints === undefined) return '0.0'
   const avgPoints = (totalPoints / (minutes / 90))
-  return avgPoints.toFixed(1)
+  return isNaN(avgPoints) ? '0.0' : avgPoints.toFixed(1)
 }
 
 /**
@@ -41,7 +41,8 @@ export const formatNumber = (num) => {
  */
 export const formatPercentage = (value, decimals = 1) => {
   if (value === null || value === undefined) return '0%'
-  return `${parseFloat(value).toFixed(decimals)}%`
+  const parsed = parseFloat(value)
+  return isNaN(parsed) ? '0%' : `${parsed.toFixed(decimals)}%`
 }
 
 /**

@@ -76,17 +76,6 @@ export default function AlgorithmSetupPage() {
               description={
                 <Space direction="vertical" size="small" style={{ width: '100%', marginTop: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ExperimentOutlined style={{ fontSize: '16px', color: '#faad14' }} />
-                    <Text strong>FPL Scout Picks</Text>
-                    <Tag color="orange" size="small">Planned</Tag>
-                  </div>
-                  <Text type="secondary" style={{ fontSize: '13px', paddingLeft: '24px' }}>
-                    Will integrate expert selections from The Scout for additional player recommendations.
-                  </Text>
-                  
-                  <Divider style={{ margin: '8px 0' }} />
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <CloudOutlined style={{ fontSize: '16px', color: '#52c41a' }} />
                     <Text strong>Sentiment Analysis</Text>
                     <Tag color="orange" size="small">Planned</Tag>
@@ -129,39 +118,45 @@ export default function AlgorithmSetupPage() {
               },
               {
                 step: 2,
-                title: 'Select Optimal Starting 11',
-                description: 'Determines the best possible starting 11 from your current squad based on hybrid scoring (form, fixtures, sentiment). Respects FPL formation rules. Applies fixture penalties: top 10 players immune to moderate fixtures (3), top 20 immune to hard fixtures (4-5).',
+                title: 'Calculate Performance Scores',
+                description: 'Scores all 15 players using the unified formula: Total Points (×3), Form (×20), Price (×15), PPG (×10), Goals (×8), Assists (×5), Fixture Bonus/Penalty, Home (+8), Ownership (+10). Players are ranked 1-15, then fixture penalties applied: Top 10 immune to all fixtures, Rank 11-20 immune to hard fixtures, Rank 21+ penalized for moderate (-30%) and hard (-60%) fixtures.',
                 color: '#52c41a'
               },
               {
                 step: 3,
+                title: 'Select Optimal Starting 11',
+                description: 'Groups players by position and tries all 8 valid formations (3-4-3, 3-5-2, 4-3-3, 4-4-2, 4-5-1, 5-3-2, 5-4-1, 5-2-3). Selects the formation with the highest combined final score. Remaining 4 players become the bench.',
+                color: '#722ed1'
+              },
+              {
+                step: 4,
+                title: 'Select Captain & Vice-Captain',
+                description: 'Captain = highest final score in starting 11. Vice-captain = 2nd highest. This guarantees your best players both START and CAPTAIN - perfect consistency!',
+                color: '#13c2c2'
+              },
+              {
+                step: 5,
                 title: 'Identify Weak Starting Players',
                 description: 'Finds players in your STARTING 11 who are underperforming, injured, or have difficult fixtures. Bench players are NOT considered for transfers.',
                 color: '#faad14'
               },
               {
-                step: 4,
-                title: 'Find Potential Targets',
-                description: 'Searches for players not in your team who have good form, easy fixtures, and positive sentiment. Filters by position and affordability.',
-                color: '#722ed1'
-              },
-              {
-                step: 5,
-                title: 'Evaluate Transfers',
-                description: 'For each potential transfer, checks if the new player would actually start and if the transfer improves the starting 11 score.',
-                color: '#13c2c2'
-              },
-              {
                 step: 6,
-                title: 'Make Intelligent Decision',
-                description: 'Decides how many transfers to make based on available free transfers and the quality of upgrades available. May use fewer than available FTs if upgrades aren\'t worthwhile.',
+                title: 'Find Potential Transfer Targets',
+                description: 'Searches for players not in your team who have good form, high scores, and availability (≥75% chance of playing). Filters by position and affordability (within budget + £15m).',
                 color: '#eb2f96'
               },
               {
                 step: 7,
-                title: 'Recommend Captain & Vice-Captain',
-                description: 'Selects captain and vice-captain using specialized scoring that prioritizes high total points, current form, and easy fixtures (1-3 difficulty). Elite players with favorable matchups are strongly preferred.',
+                title: 'Evaluate Each Transfer',
+                description: 'For each potential transfer: (1) Creates hypothetical squad with the change, (2) Recalculates starting 11, (3) Checks if new player starts, (4) Compares formation scores. Only recommends transfers that improve the starting 11.',
                 color: '#f5222d'
+              },
+              {
+                step: 8,
+                title: 'Make Transfer Decision',
+                description: 'Decides how many transfers to make: 2 FTs → use 1-2 if upgrades exist, 1 FT → use if clear upgrade exists, 0 FTs → only take hit if ≥2 starters injured. May use fewer than available FTs if upgrades aren\'t worthwhile.',
+                color: '#1890ff'
               }
             ]}
             renderItem={(item) => (
@@ -290,7 +285,7 @@ export default function AlgorithmSetupPage() {
                   <strong>Budget Constraint:</strong> The new player must be affordable with your available budget plus the sale price of the outgoing player.
                 </List.Item>
                 <List.Item>
-                  <strong>Fixture Difficulty Rule:</strong> Players with moderate fixtures (3) receive a 30% penalty unless they&apos;re in the top 10. Players with hard fixtures (4-5) receive a 60% penalty unless they&apos;re in the top 20. Elite players (Salah, Haaland, etc.) perform regardless of opposition.
+                  <strong>Rank-Based Fixture Penalties:</strong> After scoring, players are ranked 1-15. Top 10 have NO penalties (elite tier). Ranks 11-20 are immune to hard fixtures (4-5) but penalized -30% for moderate (3). Ranks 21+ penalized -30% for moderate, -60% for hard. This ensures premium players aren&apos;t unfairly benched.
                 </List.Item>
               </List>
             </div>
@@ -304,121 +299,126 @@ export default function AlgorithmSetupPage() {
           </Space>
         </Card>
 
-        {/* Captaincy Recommendations */}
+        {/* Unified Performance Scoring & Captaincy */}
         <Card className="mb-6">
           <Title level={3}>
-            <TrophyOutlined /> Captaincy Recommendations
+            <TrophyOutlined /> Unified Performance Scoring
           </Title>
           <Paragraph>
-            Choosing the right captain can double your highest-scoring player&apos;s points. The algorithm uses a specialized scoring system for captaincy that differs from general team selection.
+            The app uses a single, consistent performance scoring algorithm for both selecting the starting 11 AND choosing the captain. This ensures your best players both start and captain.
           </Paragraph>
           
           <Alert
-            message="Fixture Requirement for Captain"
-            description="Captains MUST have a fixture difficulty of 2 or better (Very Easy or Easy). Players with moderate or difficult fixtures (3, 4, or 5) will NOT be considered for captaincy, regardless of their form or total points."
-            type="warning"
+            message="Performance Score Formula - Used For Starting 11 & Captain Selection"
+            description={
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Text strong style={{ fontSize: '15px' }}>
+                  Performance Score = (Total Points × 3) + (Form × 20) + (Price × 15) + (PPG × 10) + (Goals × 8) + (Assists × 5) + Fixture Bonus + Home Bonus + Ownership Bonus
+                </Text>
+                <Divider style={{ margin: '12px 0' }} />
+                <Text><strong>Scoring Components:</strong></Text>
+                <ul style={{ marginTop: '8px', marginBottom: '0', paddingLeft: '20px' }}>
+                  <li><strong>Total Points (×3)</strong> - Season-long quality and reliability</li>
+                  <li><strong>Form (×20)</strong> - Recent performance (last 5 gameweeks)</li>
+                  <li><strong>Price (×15)</strong> - Reflects manager assessment of quality</li>
+                  <li><strong>Points Per Game (×10)</strong> - Consistency when playing</li>
+                  <li><strong>Goals (×8) & Assists (×5)</strong> - Direct attacking output</li>
+                  <li><strong>Fixture Difficulty</strong> - Bonus for easy, penalty for tough</li>
+                  <li><strong>Home Advantage (+8)</strong> - Playing at home</li>
+                  <li><strong>Ownership (50%+)</strong> - Template player bonus (+10)</li>
+                </ul>
+              </Space>
+            }
+            type="success"
             showIcon
             style={{ marginBottom: '16px' }}
           />
-          
-          <Space direction="vertical" size="large" style={{ width: '100%', marginTop: '16px' }}>
-            <Alert
-              message="Captaincy Formula"
-              description={
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Text strong style={{ fontSize: '15px' }}>Captain Score = Total Points × 2 + Form × 15 + Fixture Bonus + PPG × 5</Text>
-                  <Divider style={{ margin: '12px 0' }} />
-                  <Text strong style={{ color: '#ff4d4f' }}>✓ First Filter: Only players with fixture difficulty ≤ 2 are eligible</Text>
-                  <Divider style={{ margin: '12px 0' }} />
-                  <Text><strong>Then Rank By:</strong></Text>
-                  <ul style={{ marginTop: '8px', marginBottom: '0', paddingLeft: '20px' }}>
-                    <li>Season performance (total points) - heavily weighted</li>
-                    <li>Current form (last 5 games)</li>
-                    <li>Next gameweek fixture bonus (1 or 2 only)</li>
-                    <li>Points per 90 minutes consistency</li>
-                    <li>Home advantage</li>
-                  </ul>
-                </Space>
-              }
-              type="success"
-              showIcon
-            />
 
-            <Row gutter={[16, 16]}>
-              <Col xs={24} md={12}>
-                <Card size="small" title="Captain Eligibility & Bonuses" style={{ borderLeft: '3px solid #1890ff' }}>
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    <Text strong style={{ color: '#52c41a' }}>✓ ELIGIBLE FOR CAPTAIN:</Text>
-                    <Text><Tag color="green">Difficulty 1</Tag> <strong>+50 points</strong> - Very Easy</Text>
-                    <Text><Tag color="blue">Difficulty 2</Tag> <strong>+35 points</strong> - Easy</Text>
-                    <Divider style={{ margin: '8px 0' }} />
-                    <Text strong style={{ color: '#ff4d4f' }}>✗ NOT ELIGIBLE FOR CAPTAIN:</Text>
-                    <Text><Tag color="default">Difficulty 3</Tag> Moderate - Filtered Out</Text>
-                    <Text><Tag color="orange">Difficulty 4</Tag> Difficult - Filtered Out</Text>
-                    <Text><Tag color="red">Difficulty 5</Tag> Very Difficult - Filtered Out</Text>
-                    <Divider style={{ margin: '8px 0' }} />
-                    <Text><Tag color="purple">Home Game</Tag> <strong>+10 points</strong> bonus</Text>
-                  </Space>
-                </Card>
-              </Col>
-              
-              <Col xs={24} md={12}>
-                <Card size="small" title="Why This Works" style={{ borderLeft: '3px solid #52c41a' }}>
-                  <Space direction="vertical" size="small">
-                    <Text>✓ <strong>Only easy fixtures considered</strong> - guarantees favorable matchup</Text>
-                    <Text>✓ <strong>Reliable performers</strong> get rewarded (high total points)</Text>
-                    <Text>✓ <strong>No risky captains</strong> - moderate/hard fixtures excluded</Text>
-                    <Text>✓ <strong>Home advantage</strong> adds extra value</Text>
-                    <Text>✓ Vice-captain from same pool or best available player</Text>
-                  </Space>
-                </Card>
-              </Col>
-            </Row>
-
-            <Alert
-              message="Example Scenarios"
-              description={
-                <div>
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Text strong style={{ color: '#52c41a' }}>✓ Eligible Captain:</Text>
-                      <Text strong style={{ display: 'block', marginTop: '4px' }}>Salah</Text>
-                      <ul style={{ marginTop: '8px', marginBottom: '0' }}>
-                        <li>Total Points: 180 → 360 score</li>
-                        <li>Form: 6.0 → +90 score</li>
-                        <li>Fixture: vs Ipswich <Tag color="blue">Diff 2</Tag> → +35</li>
-                        <li>Home game → +10</li>
-                        <li><strong>Total: ~495 ✓ SELECTED</strong></li>
-                      </ul>
-                    </Col>
-                    <Col span={12}>
-                      <Text strong style={{ color: '#ff4d4f' }}>✗ Not Eligible:</Text>
-                      <Text strong style={{ display: 'block', marginTop: '4px' }}>Haaland</Text>
-                      <ul style={{ marginTop: '8px', marginBottom: '0' }}>
-                        <li>Total Points: 200 → 400 score</li>
-                        <li>Form: 8.0 → +120 score</li>
-                        <li>Fixture: vs Liverpool <Tag color="orange">Diff 4</Tag></li>
-                        <li>Away game → +0</li>
-                        <li><strong>EXCLUDED - Fixture too hard!</strong></li>
-                      </ul>
-                    </Col>
-                  </Row>
-                  <Text strong style={{ display: 'block', marginTop: '12px', color: '#52c41a' }}>
-                    Result: Salah becomes captain despite Haaland having better form, because Haaland&apos;s fixture is too difficult (4)!
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Card size="small" title="Fixture Impact" style={{ borderLeft: '3px solid #1890ff' }}>
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  <Text strong>Fixture Bonuses & Penalties:</Text>
+                  <Text><Tag color="green">Difficulty 1</Tag> <strong>+40 points</strong> - Very Easy</Text>
+                  <Text><Tag color="blue">Difficulty 2</Tag> <strong>+25 points</strong> - Easy</Text>
+                  <Text><Tag color="default">Difficulty 3</Tag> <strong>+5 points</strong> - Moderate</Text>
+                  <Text><Tag color="orange">Difficulty 4</Tag> <strong>-15 points</strong> - Tough</Text>
+                  <Text><Tag color="red">Difficulty 5</Tag> <strong>-30 points</strong> - Very Tough</Text>
+                  <Divider style={{ margin: '8px 0' }} />
+                  <Text type="secondary" style={{ fontSize: '13px' }}>
+                    Note: Fixtures are a BONUS, not a gatekeeper. Premium players with tough fixtures can still be captain if their overall score is highest.
                   </Text>
-                </div>
-              }
-              type="info"
-              showIcon
-            />
+                </Space>
+              </Card>
+            </Col>
+            
+            <Col xs={24} md={12}>
+              <Card size="small" title="Why This Unified Approach" style={{ borderLeft: '3px solid #52c41a' }}>
+                <Space direction="vertical" size="small">
+                  <Text>✓ <strong>Consistency</strong> - Same logic everywhere in the app</Text>
+                  <Text>✓ <strong>Quality First</strong> - Premium players properly valued</Text>
+                  <Text>✓ <strong>Balanced</strong> - Form, fixtures, and output all matter</Text>
+                  <Text>✓ <strong>Transparent</strong> - See exactly why players rank as they do</Text>
+                  <Text>✓ <strong>Predictable</strong> - Highest score = Captain = Starts</Text>
+                </Space>
+              </Card>
+            </Col>
+          </Row>
 
-            <div>
-              <Text strong style={{ fontSize: '14px' }}>Pro Tip:</Text>
-              <Paragraph style={{ marginTop: '8px', marginBottom: '0' }}>
-                The algorithm <strong>only considers players with easy fixtures (1-2 difficulty)</strong> for captaincy. This means even elite players like Haaland or Salah won&apos;t be selected as captain if they face a tough opponent that week. The system prioritizes <strong>safe, high-probability returns</strong> over risky captaincy choices. If no player has an easy fixture (rare), it will fall back to the best player regardless of fixture.
-              </Paragraph>
-            </div>
-          </Space>
+          <Alert
+            message="Example: Haaland vs Mateta"
+            description={
+              <div>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Text strong style={{ color: '#52c41a' }}>Haaland (Diff 3 Fixture):</Text>
+                    <ul style={{ marginTop: '8px', marginBottom: '0' }}>
+                      <li>Total Points: 150 → 450 score</li>
+                      <li>Form: 7.5 → +150 score</li>
+                      <li>Price: £15.0m → +225 score</li>
+                      <li>PPG: 6.5 → +65 score</li>
+                      <li>Goals: 15 → +120 score</li>
+                      <li>Fixture: Diff 3 → +5 bonus</li>
+                      <li><strong>Total: ~1,025 ✓ CAPTAIN</strong></li>
+                    </ul>
+                  </Col>
+                  <Col span={12}>
+                    <Text strong>Mateta (Diff 2 Fixture):</Text>
+                    <ul style={{ marginTop: '8px', marginBottom: '0' }}>
+                      <li>Total Points: 65 → 195 score</li>
+                      <li>Form: 5.2 → +104 score</li>
+                      <li>Price: £6.0m → +90 score</li>
+                      <li>PPG: 4.1 → +41 score</li>
+                      <li>Goals: 8 → +64 score</li>
+                      <li>Fixture: Diff 2 → +25 bonus</li>
+                      <li><strong>Total: ~524 - Vice/Bench</strong></li>
+                    </ul>
+                  </Col>
+                </Row>
+                <Text strong style={{ display: 'block', marginTop: '12px', color: '#52c41a' }}>
+                  Result: Haaland is captain because his quality (1,025) far exceeds Mateta (524), even with a slightly harder fixture!
+                </Text>
+              </div>
+            }
+            type="info"
+            showIcon
+            style={{ marginTop: '16px' }}
+          />
+
+          <div style={{ marginTop: '16px' }}>
+            <Text strong style={{ fontSize: '14px' }}>How Starting 11 & Captain Are Selected:</Text>
+            <Paragraph style={{ marginTop: '8px', marginBottom: '0' }}>
+              1. Every player gets a <strong>base score</strong> using the formula above<br />
+              2. Players are <strong>ranked 1-15</strong> by base score<br />
+              3. <strong>Fixture penalties</strong> applied based on rank and fixture difficulty<br />
+              4. Players grouped by position, sorted by <strong>final score</strong><br />
+              5. <strong>Starting 11:</strong> Best formation by combined final score<br />
+              6. <strong>Captain:</strong> Highest final score IN starting 11<br />
+              7. <strong>Vice-Captain:</strong> 2nd highest final score IN starting 11<br />
+              <br />
+              This ensures your top performers are always starting AND captaining - perfect consistency!
+            </Paragraph>
+          </div>
         </Card>
 
         {/* Fixture Difficulty Strategy */}
@@ -511,52 +511,106 @@ export default function AlgorithmSetupPage() {
           </Space>
         </Card>
 
-        {/* Scoring System */}
+        {/* Algorithm Flow Visualization */}
         <Card className="mb-6">
-          <Title level={3}>Hybrid Scoring System</Title>
+          <Title level={3}>
+            <ExperimentOutlined /> Algorithm Flow Visualization
+          </Title>
           <Paragraph>
-            Each player is scored using a hybrid algorithm that combines multiple factors with carefully weighted components:
+            Here&apos;s how the unified algorithm processes your team step-by-step:
           </Paragraph>
           
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={8}>
-              <Card size="small" title="Form & Stats (40%)" style={{ borderLeft: '3px solid #1890ff' }}>
-                <Space direction="vertical" size="small">
-                  <Text>• Current form (last 5 games)</Text>
-                  <Text>• Points per game average</Text>
-                  <Text>• Recent performance trends</Text>
-                  <Text>• Consistency metrics</Text>
-                </Space>
-              </Card>
-            </Col>
-            
-            <Col xs={24} md={8}>
-              <Card size="small" title="Fixtures (55%)" style={{ borderLeft: '3px solid #52c41a' }}>
-                <Space direction="vertical" size="small">
-                  <Text>• Next 5 fixtures difficulty</Text>
-                  <Text>• Opponent strength ratings</Text>
-                  <Text>• Home vs Away balance</Text>
-                  <Text><strong>Largest weight</strong> - fixtures matter most!</Text>
-                </Space>
-              </Card>
-            </Col>
-            
-            <Col xs={24} md={8}>
-              <Card size="small" title="Availability (5%)" style={{ borderLeft: '3px solid #faad14' }}>
-                <Space direction="vertical" size="small">
-                  <Text>• <strong>100% fit:</strong> Small bonus</Text>
-                  <Text>• <strong>75-99%:</strong> Full consideration</Text>
-                  <Text>• <strong>50-74%:</strong> 50% penalty</Text>
-                  <Text>• <strong>&lt;50%:</strong> Excluded from selection</Text>
-                </Space>
-              </Card>
-            </Col>
-          </Row>
+          <div style={{ background: '#f5f5f5', padding: '24px', borderRadius: '8px', fontFamily: 'monospace', fontSize: '13px', overflowX: 'auto' }}>
+            <pre style={{ margin: 0, whiteSpace: 'pre' }}>
+{`┌─────────────────────────────────────────────────────────────┐
+│                   YOUR 15-PLAYER SQUAD                      │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+                          ▼
+              ┌───────────────────────┐
+              │  CALCULATE BASE SCORE │
+              │  (All 15 players)     │
+              └───────────┬───────────┘
+                          │
+        For each player:  │
+        • Total Points × 3                = Quality
+        • Form × 20                       = Recent Performance
+        • Price × 15                      = Manager Assessment
+        • PPG × 10                        = Consistency
+        • Goals × 8 + Assists × 5         = Output
+        • Fixture Bonus/Penalty           = Match Difficulty
+        • Home Bonus (+8)                 = Home Advantage
+        • Ownership ≥50% (+10)            = Template Player
+                          │
+                          ▼
+              ┌───────────────────────┐
+              │  SORT BY BASE SCORE   │
+              │  Highest → Lowest     │
+              └───────────┬───────────┘
+                          │
+                          ▼
+              ┌───────────────────────┐
+              │   ASSIGN RANK 1-15    │
+              └───────────┬───────────┘
+                          │
+                          ▼
+         ┌────────────────────────────────────┐
+         │     APPLY FIXTURE PENALTIES        │
+         │   (Based on rank & difficulty)     │
+         └────────────┬───────────────────────┘
+                      │
+         ┌────────────┴────────────┐
+         │                         │
+         ▼                         ▼
+   Rank 1-10                 Rank 11-15
+  (Elite Players)           (Other Players)
+         │                         │
+   NO PENALTIES            ├─ Diff 3? → -30%
+         │                 ├─ Diff 4-5 & Rank 11-20? → Immune
+         │                 └─ Diff 4-5 & Rank 21+? → -60%
+         │                         │
+         └────────────┬────────────┘
+                      │
+                      ▼
+         ┌────────────────────────┐
+         │   ALL PLAYERS HAVE     │
+         │   FINAL SCORE          │
+         └────────────┬───────────┘
+                      │
+         ┌────────────┴────────────┐
+         │                         │
+         ▼                         ▼
+   ┌─────────────┐         ┌─────────────┐
+   │  STARTING   │         │  CAPTAINCY  │
+   │  11 LOGIC   │         │  SELECTION  │
+   └──────┬──────┘         └──────┬──────┘
+          │                       │
+          │ Try 8 formations      │ Captain = Highest
+          │ Pick best by score    │ Vice = 2nd Highest
+          │                       │
+          ▼                       ▼
+   Starting 11              Captain & Vice
+   + Bench (4)              (From Starting 11)
+          │                       │
+          └──────────┬────────────┘
+                     │
+                     ▼
+          ┌──────────────────────┐
+          │   TRANSFER LOGIC     │
+          └──────────┬───────────┘
+                     │
+        Only transfers │ Must improve
+        starting 11    │ starting 11 score
+                     │
+                     ▼
+          Recommended Transfers`}
+            </pre>
+          </div>
 
           <Alert
             className="mt-4"
-            message="Why Fixtures Are Prioritized"
-            description="Fixtures are weighted at 55% because match difficulty is the strongest predictor of points. A top player against a weak team has much higher expected returns than the same player against a top-6 side. Form and stats (40%) matter, but favorable fixtures are the key to maximizing points."
+            message="Key Insight: Single Unified Score"
+            description="Notice how the same FINAL SCORE is used for both starting 11 selection AND captaincy. This is what makes the algorithm unified - your best players start, and your best starter is captain. No contradictions possible!"
             type="success"
             showIcon
           />

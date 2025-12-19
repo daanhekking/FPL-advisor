@@ -11,7 +11,7 @@ export const SentimentBadge = ({ score, showTooltip = true }) => {
     if (score > 8) {
         color = 'gold'
         icon = <FireOutlined />
-        text = 'Scout Pick!'
+        text = 'Excellent'
     } else if (score > 6) {
         color = 'green'
         icon = <RiseOutlined />

@@ -2,6 +2,13 @@ import { logInfo, logSuccess, logError } from '../utils/debug-logger'
 import { monitoredFetchJSON } from '../utils/monitored-fetch'
 
 export const fetchFPLData = async (teamId) => {
+    // Validate team ID
+    if (!teamId || isNaN(teamId) || teamId === 'null' || teamId === 'undefined' || teamId === 'new-team') {
+        const error = new Error(`Invalid team ID: ${teamId}. Please check your team ID.`)
+        logError('Invalid team ID provided', error, { teamId })
+        throw error
+    }
+    
     try {
         logInfo(`Starting FPL data fetch for team ${teamId}`, { teamId })
 

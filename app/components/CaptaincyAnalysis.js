@@ -60,22 +60,49 @@ export const CaptaincyAnalysis = ({ captaincyRecommendation, loading }) => {
       render: (position) => <Tag>{position}</Tag>
     },
     {
-      title: 'Captaincy Score',
-      dataIndex: 'captaincyScore',
-      key: 'captaincyScore',
-      width: 140,
-      sorter: (a, b) => b.captaincyScore - a.captaincyScore,
-      render: (score, record, index) => {
+      title: 'Performance Score',
+      key: 'performanceScore',
+      width: 160,
+      sorter: (a, b) => {
+        const scoreA = a.finalScore || a.captaincyScore || 0
+        const scoreB = b.finalScore || b.captaincyScore || 0
+        return scoreB - scoreA
+      },
+      render: (_, record, index) => {
+        const score = record.finalScore || record.captaincyScore || 0
+        const rank = record.rank || (index + 1)
+        
         let color = 'default'
         if (index === 0) color = 'success'
         else if (index < 3) color = 'processing'
         else if (index < 5) color = 'warning'
         
         return (
-          <Tag color={color} style={{ fontSize: 14, padding: '4px 8px' }}>
-            {score.toFixed(0)}
-          </Tag>
+          <Space direction="vertical" size={0}>
+            <Tag color={color} style={{ fontSize: 14, padding: '4px 8px' }}>
+              {score.toFixed(0)}
+            </Tag>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              Rank #{rank}
+            </Text>
+          </Space>
         )
+      }
+    },
+    {
+      title: 'Penalty',
+      key: 'penalty',
+      width: 120,
+      render: (_, record) => {
+        const penalty = record.penaltyApplied
+        if (!penalty || penalty === 'NONE' || penalty.includes('Top')) {
+          return <Tag color="green">None</Tag>
+        } else if (penalty.includes('30%')) {
+          return <Tag color="orange">-30%</Tag>
+        } else if (penalty.includes('60%')) {
+          return <Tag color="red">-60%</Tag>
+        }
+        return <Text type="secondary">-</Text>
       }
     },
     {

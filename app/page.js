@@ -25,10 +25,10 @@ import { TeamStats } from './components/TeamStats'
 import { RecommendedTeamTab } from './components/RecommendedTeamTab'
 import { CurrentSquadTab } from './components/CurrentSquadTab'
 import { CaptaincyAnalysis } from './components/CaptaincyAnalysis'
+import { BestFixtures } from './components/BestFixtures'
 import {
   getTargetsTableColumns,
-  getWeakPlayersTableColumns,
-  getBestFixturesTableColumns
+  getWeakPlayersTableColumns
 } from './components/TableColumns'
 
 const { Content } = Layout
@@ -48,28 +48,40 @@ export default function MyTeamAdvisor() {
   const [randomSeed, setRandomSeed] = useState(0)
   const [activeTab, setActiveTab] = useState('0')
   const [fixturesToShow] = useState(5)
+  const [transfersToUse, setTransfersToUse] = useState(null) // null means auto-calculate
 
   // Initialize team ID from localStorage
   useEffect(() => {
-    const savedTeamId = localStorage.getItem('fplTeamId') || DEFAULT_TEAM_ID
-    setTeamId(savedTeamId)
+    const savedTeamId = localStorage.getItem('fplTeamId')
+
+    // Validate team ID is a number
+    const validTeamId = savedTeamId && !isNaN(savedTeamId) && savedTeamId !== 'null' && savedTeamId !== 'undefined'
+      ? savedTeamId
+      : DEFAULT_TEAM_ID
+
+    setTeamId(validTeamId)
+
+    // Clean up invalid localStorage value
+    if (!validTeamId || savedTeamId !== validTeamId) {
+      localStorage.setItem('fplTeamId', validTeamId)
+    }
   }, [])
 
   // Fetch team data using custom hook
-  const { 
-    data, 
-    loading, 
-    error, 
-    chipStrategy, 
-    last3PointsData, 
-    refetch 
+  const {
+    data,
+    loading,
+    error,
+    chipStrategy,
+    last3PointsData,
+    refetch
   } = useTeamData(teamId)
 
   // Generate recommendations using custom hook
-  const { 
-    recommendations, 
-    loading: recommendationsLoading 
-  } = useRecommendations(data, randomSeed, fixturesToShow, last3PointsData)
+  const {
+    recommendations,
+    loading: recommendationsLoading
+  } = useRecommendations(data, randomSeed, fixturesToShow, last3PointsData, transfersToUse)
 
   // Get squad data using custom hook
   const {
@@ -111,13 +123,13 @@ export default function MyTeamAdvisor() {
     return (
       <Layout style={{ minHeight: '100vh' }}>
         <Content className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-          <div style={{ 
-            display: 'flex', 
+          <div style={{
+            display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center', 
+            alignItems: 'center',
             justifyContent: 'center',
             minHeight: '60vh',
-            gap: 16 
+            gap: 16
           }}>
             <Spin size="large" />
             <Text type="secondary">Consulting the AI Coach...</Text>
@@ -130,10 +142,41 @@ export default function MyTeamAdvisor() {
   // Error state (without data)
   if (error && !data) {
     return (
-      <div className="p-8 text-center">
-        <Alert type="error" message="Error" description={error} />
-        <Button className="mt-4" onClick={handleRefresh}>Retry</Button>
-      </div>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Content className="p-4 md:p-8 max-w-7xl mx-auto w-full">
+          <div style={{ maxWidth: 600, margin: '60px auto' }}>
+            <Alert
+              type="error"
+              message="Failed to Load Team Data"
+              description={
+                <div>
+                  <p>{error}</p>
+                  {error.includes('Invalid team ID') && (
+                    <p style={{ marginTop: 12 }}>
+                      Your team ID appears to be invalid. Current ID: <strong>{teamId}</strong>
+                      <br />
+                      Please select a valid team from the dropdown above.
+                    </p>
+                  )}
+                </div>
+              }
+              style={{ marginBottom: 16 }}
+            />
+            <Space>
+              <Button onClick={handleRefresh}>Retry</Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  localStorage.removeItem('fplTeamId')
+                  window.location.reload()
+                }}
+              >
+                Reset to Default Team
+              </Button>
+            </Space>
+          </div>
+        </Content>
+      </Layout>
     )
   }
 
@@ -149,7 +192,7 @@ export default function MyTeamAdvisor() {
           opacity: 0.5;
         }
       `}</style>
-      
+
       <Layout style={{ minHeight: '100vh' }}>
         <Content className="p-4 md:p-8 max-w-7xl mx-auto w-full">
           {/* Error Alert (partial data loaded) */}
@@ -162,7 +205,7 @@ export default function MyTeamAdvisor() {
               className="mb-6"
             />
           )}
-          
+
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
@@ -208,8 +251,8 @@ export default function MyTeamAdvisor() {
                     <span>
                       Recommended Team
                       {recommendations?.suggestedTransfers?.length > 0 && (
-                        <Badge 
-                          count={recommendations.suggestedTransfers.length} 
+                        <Badge
+                          count={recommendations.suggestedTransfers.length}
                           style={{ marginLeft: 8, backgroundColor: '#52c41a' }}
                         />
                       )}
@@ -221,6 +264,8 @@ export default function MyTeamAdvisor() {
                       recommendedSquadGrouped={recommendedSquadGrouped}
                       captaincyRecommendation={captaincyRecommendation}
                       loading={recommendationsLoading}
+                      onTransfersChange={setTransfersToUse}
+                      currentTransfersToUse={transfersToUse}
                     />
                   )
                 },
@@ -271,11 +316,9 @@ export default function MyTeamAdvisor() {
                   key: '4',
                   label: 'Best Fixtures',
                   children: (
-                    <StandardTable
+                    <BestFixtures
+                      bestFixturesData={bestFixturesData}
                       loading={loading}
-                      dataSource={bestFixturesData}
-                      columns={getBestFixturesTableColumns()}
-                      rowKey="id"
                     />
                   )
                 },

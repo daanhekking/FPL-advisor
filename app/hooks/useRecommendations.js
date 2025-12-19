@@ -13,7 +13,7 @@ import { generateRecommendations } from '../services/algorithm-service'
  * @param {Object} last3PointsData - Last 3 gameweeks points data
  * @returns {Object} { recommendations, loading }
  */
-export const useRecommendations = (data, randomSeed = 0, fixturesToShow = 5, last3PointsData = {}) => {
+export const useRecommendations = (data, randomSeed = 0, fixturesToShow = 5, last3PointsData = {}, userInputTransfers = null) => {
   const [recommendations, setRecommendations] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -35,7 +35,8 @@ export const useRecommendations = (data, randomSeed = 0, fixturesToShow = 5, las
           data.fixtures,
           randomSeed,
           fixturesToShow,
-          last3PointsData
+          last3PointsData,
+          userInputTransfers
         )
         setRecommendations(recs)
         setLoading(false)
@@ -47,7 +48,7 @@ export const useRecommendations = (data, randomSeed = 0, fixturesToShow = 5, las
     }, 0)
 
     return () => clearTimeout(timeoutId)
-  }, [data, randomSeed, fixturesToShow, last3PointsData])
+  }, [data, randomSeed, fixturesToShow, last3PointsData, userInputTransfers])
 
   return {
     recommendations,

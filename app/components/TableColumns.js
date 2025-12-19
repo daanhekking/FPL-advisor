@@ -32,10 +32,10 @@ export const createPlayerColumn = ({ showCaptaincy = false, showBench = false, s
 })
 
 export const createFixturesColumn = (maxShow = 5) => ({
-  title: <Tooltip title="Upcoming fixtures with color-coded difficulty (green=easy, yellow=medium, red=hard). @ indicates away game.">Next {maxShow}</Tooltip>,
+  title: <Tooltip title="Upcoming fixtures with color-coded difficulty (green=easy, yellow=medium, red=hard). @ indicates away game.">Upcoming Fixtures</Tooltip>,
   dataIndex: 'fixtures',
   key: 'fixtures',
-  width: 250,
+  width: 310,
   responsive: ['md'],
   render: (fixtures) => <FixtureChips fixtures={fixtures} maxShow={maxShow} />,
 })
@@ -48,7 +48,7 @@ export const createAvgDifficultyColumn = () => ({
   sorter: (a, b) => a.avgDifficulty - b.avgDifficulty,
   render: (val) => (
     <Tag color={getDifficultyColor(val)}>
-      {val.toFixed(1)}
+      {val !== null && val !== undefined ? val.toFixed(1) : '-'}
     </Tag>
   ),
 })
@@ -118,8 +118,8 @@ export const createPositionColumn = () => ({
 
 // Standardized column set - used across all tables
 const getStandardColumns = (options = {}) => [
-  createPlayerColumn({ 
-    showPosition: false, 
+  createPlayerColumn({
+    showPosition: false,
     showForm: false,
     showCaptaincy: options.showCaptaincy || false,
     showBench: options.showBench || false
@@ -138,20 +138,7 @@ export const getTargetsTableColumns = () => getStandardColumns()
 
 export const getWeakPlayersTableColumns = () => getStandardColumns()
 
-export const getSquadTableColumns = () => getStandardColumns({ 
-  showCaptaincy: true, 
-  showBench: true 
+export const getSquadTableColumns = () => getStandardColumns({
+  showCaptaincy: true,
+  showBench: true
 })
-
-// Best Fixtures table - excludes fixtures and avg difficulty columns
-export const getBestFixturesTableColumns = () => [
-  createPlayerColumn({ 
-    showPosition: false, 
-    showForm: false,
-  }),
-  createPositionColumn(),
-  createPriceColumn(),
-  createFormColumn(),
-  createPPGColumn(),
-  createTotalPointsColumn(),
-]
