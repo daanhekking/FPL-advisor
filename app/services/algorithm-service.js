@@ -1,6 +1,7 @@
 import { getPlayerFixtures } from './fpl-service'
 import {
     selectOptimalStarting11,
+    selectOptimalStarting15,
     selectCaptainAndVice,
     generateTransferSuggestions as unifiedGenerateTransfers,
     determineTransferCount
@@ -17,7 +18,7 @@ export const calculateHybridScore = (player, fixtures) => {
     return (form * 2.0) + (ppg * 2.0)
 }
 
-export const generateRecommendations = (picks, players, teams, fixtures, seed = 0, fixtureWindow = 5, last3PointsData = {}, userInputTransfers = null) => {
+export const generateRecommendations = (picks, players, teams, fixtures, seed = 0, fixtureWindow = 5, last3PointsData = {}, userInputTransfers = null, targetGW = null, useBenchBoost = false) => {
     const myPlayerIds = picks.picks.map(p => p.element)
     const myPlayerData = myPlayerIds.map(id => {
         const player = players.find(p => p.id === id)
@@ -25,7 +26,13 @@ export const generateRecommendations = (picks, players, teams, fixtures, seed = 
         return { ...player, pick }
     }).filter(p => p && p.id)
 
-    const upcomingFixtures = fixtures.filter(f => !f.finished_provisional).slice(0, 50)
+    // Filter fixtures based on targetGW
+    let upcomingFixtures = fixtures.filter(f => !f.finished_provisional)
+    if (targetGW) {
+        upcomingFixtures = upcomingFixtures.filter(f => f.event >= targetGW)
+    }
+    upcomingFixtures = upcomingFixtures.slice(0, 50)
+
     const budget = (picks.entry_history?.bank || 0) / 10
 
     // Create fixture lookup function for unified algorithm
@@ -33,11 +40,15 @@ export const generateRecommendations = (picks, players, teams, fixtures, seed = 
         return getPlayerFixtures(playerId, players, teams, upcomingFixtures).slice(0, fixtureWindow)
     }
 
-    // STEP 1: Determine current optimal starting 11 using unified algorithm
-    const currentTeamSelection = selectOptimalStarting11(myPlayerData, getFixturesForPlayer)
+    // STEP 1: Determine current optimal starting 11 (or 15 if Bench Boost)
+    const currentTeamSelection = useBenchBoost
+        ? selectOptimalStarting15(myPlayerData, getFixturesForPlayer)
+        : selectOptimalStarting11(myPlayerData, getFixturesForPlayer)
+
     const starting11Ids = new Set(currentTeamSelection.starting11.map(p => p.id))
 
     // STEP 2: Generate transfer suggestions using unified algorithm
+    // Note: The greedy algorithm in unifiedGenerateTransfers naturally optimizes for total score improvement
     const freeTransfers = picks.transfers?.limit || 1
     const transferSuggestions = unifiedGenerateTransfers({
         currentSquad: myPlayerData,
@@ -56,7 +67,9 @@ export const generateRecommendations = (picks, players, teams, fixtures, seed = 
     })
 
     // STEP 4: Determine optimal starting 11 for the NEW squad
-    const postTransferSelection = selectOptimalStarting11(postTransferSquad, getFixturesForPlayer)
+    const postTransferSelection = useBenchBoost
+        ? selectOptimalStarting15(postTransferSquad, getFixturesForPlayer)
+        : selectOptimalStarting11(postTransferSquad, getFixturesForPlayer)
 
     // STEP 5: Build weak players list (for display purposes)
     const weakPlayers = currentTeamSelection.starting11
@@ -76,7 +89,7 @@ export const generateRecommendations = (picks, players, teams, fixtures, seed = 
                 team,
                 form: parseFloat(p.form || 0),
                 totalPoints: p.total_points || 0,
-                hybridScore: p.finalScore || 0 // Use finalScore from unified algorithm
+                hybridScore: p.finalScore || 0
             }
         })
         .sort((a, b) => a.hybridScore - b.hybridScore)
@@ -101,6 +114,7 @@ export const generateRecommendations = (picks, players, teams, fixtures, seed = 
         })
 
     // STEP 7: Select captain and vice-captain using unified algorithm (on POST-transfer squad)
+    // Even in Bench Boost, you still have a captain!
     const captaincy = selectCaptainAndVice(postTransferSelection.starting11)
 
     return {

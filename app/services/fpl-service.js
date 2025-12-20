@@ -8,7 +8,7 @@ export const fetchFPLData = async (teamId) => {
         logError('Invalid team ID provided', error, { teamId })
         throw error
     }
-    
+
     try {
         logInfo(`Starting FPL data fetch for team ${teamId}`, { teamId })
 
@@ -37,9 +37,17 @@ export const fetchFPLData = async (teamId) => {
             fixtures: fixturesData?.length
         })
 
+        // Determine the correct gameweek to fetch picks for
+        // We want the 'next' gameweek to ensure we get the reverted squad after a Free Hit
+        const nextEvent = bootstrap.events?.find(e => e.is_next)
+        const currentEvent = bootstrap.events?.find(e => e.is_current)
+        const targetGameweek = nextEvent ? nextEvent.id : (currentEvent ? currentEvent.id : 'current')
+
+        logInfo(`Fetching picks for gameweek: ${targetGameweek} (Next: ${nextEvent?.id}, Current: ${currentEvent?.id})`)
+
         // Fetch picks and history in parallel
         const [picks, history] = await Promise.all([
-            monitoredFetchJSON(`/api/fpl/team/${teamId}/picks?gameweek=current`, { cache: 'no-store' }, 20000, 1)
+            monitoredFetchJSON(`/api/fpl/team/${teamId}/picks?gameweek=${targetGameweek}`, { cache: 'no-store' }, 20000, 1)
                 .catch(err => {
                     logError('Failed to fetch team picks', err, { teamId })
                     throw new Error(`Team picks failed: ${err.message}`)
@@ -97,7 +105,7 @@ export const calculateLast3GameweeksPoints = async (playerIds) => {
     try {
         // Limit to top 15 players to reduce API calls significantly
         const limitedIds = playerIds.slice(0, 15)
-        
+
         logInfo(`Calculating last 3 gameweeks for ${limitedIds.length} players`, {
             playerCount: limitedIds.length
         })
@@ -111,7 +119,7 @@ export const calculateLast3GameweeksPoints = async (playerIds) => {
             const promises = batch.map(async (playerId) => {
                 try {
                     const data = await monitoredFetchJSON(`/api/fpl/player/${playerId}`, { cache: 'no-store' }, 5000, 0)
-                    
+
                     // Get last 3 gameweeks from history
                     const history = data.history || []
                     const last3 = history.slice(-3)
@@ -120,9 +128,9 @@ export const calculateLast3GameweeksPoints = async (playerIds) => {
                     return { playerId, points: totalPoints }
                 } catch (err) {
                     // Silently fail for individual players - use approximation
-                    logInfo(`Failed to fetch history for player ${playerId}`, { 
-                        playerId, 
-                        error: err.message 
+                    logInfo(`Failed to fetch history for player ${playerId}`, {
+                        playerId,
+                        error: err.message
                     })
                     return { playerId, points: null }
                 }

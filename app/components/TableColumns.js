@@ -40,6 +40,19 @@ export const createFixturesColumn = (maxShow = 5) => ({
   render: (fixtures) => <FixtureChips fixtures={fixtures} maxShow={maxShow} />,
 })
 
+export const createGameweekColumn = (gameweek, index) => ({
+  title: <Tooltip title={`Opponent and difficulty for Gameweek ${gameweek}`}>GW {gameweek}</Tooltip>,
+  dataIndex: 'fixtures',
+  key: `gw_${gameweek}`,
+  width: 70,
+  align: 'center',
+  render: (fixtures) => {
+    const fixture = fixtures && fixtures[index]
+    if (!fixture) return <span style={{ color: '#d9d9d9' }}>-</span>
+    return <FixtureChips fixtures={[fixture]} maxShow={1} />
+  },
+})
+
 export const createAvgDifficultyColumn = () => ({
   title: <Tooltip title="Average difficulty of next 5 fixtures (1=easiest, 5=hardest). Click to sort.">Avg Diff</Tooltip>,
   dataIndex: 'avgDifficulty',

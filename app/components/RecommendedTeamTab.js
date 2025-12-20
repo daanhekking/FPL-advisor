@@ -153,143 +153,145 @@ export const RecommendedTeamTab = ({
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Spin spinning={loading}>
-        {/* Strategy & Transfers Card */}
-        <Card
-          className="shadow-sm"
-          title={
-            <Space size="middle" wrap style={{ width: '100%', justifyContent: 'space-between' }}>
-              <Space size="middle">
-                <CheckOutlined style={{ color: '#52c41a' }} />
-                <Text strong style={{ fontSize: 16 }}>Recommended Strategy & Transfers</Text>
-              </Space>
-
-              <Space size="large" wrap>
-                <Space>
-                  <Text type="secondary" style={{ fontSize: 13 }}>Transfers: </Text>
-                  <Select
-                    value={selectedTransfers}
-                    onChange={setSelectedTransfers}
-                    style={{ width: 70 }}
-                    size="small"
-                  >
-                    {[1, 2, 3, 4, 5].map(num => (
-                      <Option key={num} value={num}>{num}</Option>
-                    ))}
-                  </Select>
-                  <Button
-                    type="primary"
-                    icon={<CheckOutlined />}
-                    onClick={handleApply}
-                    disabled={selectedTransfers === currentTransfersToUse}
-                    size="small"
-                  >
-                    Apply
-                  </Button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Strategy & Transfers Card */}
+          <Card
+            className="shadow-sm"
+            title={
+              <Space size="middle" wrap style={{ width: '100%', justifyContent: 'space-between' }}>
+                <Space size="middle">
+                  <CheckOutlined style={{ color: '#52c41a' }} />
+                  <Text strong style={{ fontSize: 16 }}>Recommended Strategy & Transfers</Text>
                 </Space>
 
-                {recommendations?.suggestedTransfers && recommendations.suggestedTransfers.length > 0 && (
-                  <Space size={4}>
-                    <Text type="secondary" style={{ fontSize: 13 }}>Cost/Gain: </Text>
-                    <Text strong style={{
-                      fontSize: 13,
-                      color: (() => {
-                        const costGain = recommendations.suggestedTransfers.reduce((sum, transfer) => {
-                          const soldPrice = transfer.out.now_cost / 10
-                          const boughtPrice = transfer.in.now_cost / 10
-                          return sum + (soldPrice - boughtPrice)
-                        }, 0)
-                        return costGain >= 0 ? '#52c41a' : '#ff4d4f'
-                      })()
-                    }}>
-                      {(() => {
-                        const costGain = recommendations.suggestedTransfers.reduce((sum, transfer) => {
-                          const soldPrice = transfer.out.now_cost / 10
-                          const boughtPrice = transfer.in.now_cost / 10
-                          return sum + (soldPrice - boughtPrice)
-                        }, 0)
-                        return `£${costGain.toFixed(1)}m`
-                      })()}
-                    </Text>
+                <Space size="large" wrap>
+                  <Space>
+                    <Text type="secondary" style={{ fontSize: 13 }}>Transfers: </Text>
+                    <Select
+                      value={selectedTransfers}
+                      onChange={setSelectedTransfers}
+                      style={{ width: 70 }}
+                      size="small"
+                    >
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <Option key={num} value={num}>{num}</Option>
+                      ))}
+                    </Select>
+                    <Button
+                      type="primary"
+                      icon={<CheckOutlined />}
+                      onClick={handleApply}
+                      disabled={selectedTransfers === currentTransfersToUse}
+                      size="small"
+                    >
+                      Apply
+                    </Button>
                   </Space>
-                )}
 
-                {recommendations?.formation && (
-                  <Space size={4}>
-                    <Text type="secondary" style={{ fontSize: 13 }}>Formation: </Text>
-                    <Tag style={{ margin: 0 }}>
-                      {recommendations.formation.DEF}-{recommendations.formation.MID}-{recommendations.formation.FWD}
-                    </Tag>
-                  </Space>
-                )}
+                  {recommendations?.suggestedTransfers && recommendations.suggestedTransfers.length > 0 && (
+                    <Space size={4}>
+                      <Text type="secondary" style={{ fontSize: 13 }}>Cost/Gain: </Text>
+                      <Text strong style={{
+                        fontSize: 13,
+                        color: (() => {
+                          const costGain = recommendations.suggestedTransfers.reduce((sum, transfer) => {
+                            const soldPrice = transfer.out.now_cost / 10
+                            const boughtPrice = transfer.in.now_cost / 10
+                            return sum + (soldPrice - boughtPrice)
+                          }, 0)
+                          return costGain >= 0 ? '#52c41a' : '#ff4d4f'
+                        })()
+                      }}>
+                        {(() => {
+                          const costGain = recommendations.suggestedTransfers.reduce((sum, transfer) => {
+                            const soldPrice = transfer.out.now_cost / 10
+                            const boughtPrice = transfer.in.now_cost / 10
+                            return sum + (soldPrice - boughtPrice)
+                          }, 0)
+                          return `£${costGain.toFixed(1)}m`
+                        })()}
+                      </Text>
+                    </Space>
+                  )}
+
+                  {recommendations?.formation && (
+                    <Space size={4}>
+                      <Text type="secondary" style={{ fontSize: 13 }}>Formation: </Text>
+                      <Tag style={{ margin: 0 }}>
+                        {recommendations.formation.DEF}-{recommendations.formation.MID}-{recommendations.formation.FWD}
+                      </Tag>
+                    </Space>
+                  )}
+                </Space>
               </Space>
-            </Space>
-          }
-        >
-          {/* Status Badges */}
-          <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
-            <Badge status="success" text={<Text type="secondary" style={{ fontSize: 12 }}>Transfer In</Text>} />
-            <Badge status="default" text={<Text type="secondary" style={{ fontSize: 12, opacity: 0.6 }}>Transfer Out</Text>} />
-          </div>
-
-          {/* Explanations Section */}
-          {recommendations?.suggestedTransfers && recommendations.suggestedTransfers.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {generateTransferExplanations(recommendations.suggestedTransfers).map(({ index, reason }) => (
-                <TransferExplanation
-                  key={index}
-                  explanation={reason}
-                  index={index}
-                />
-              ))}
+            }
+          >
+            {/* Status Badges */}
+            <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
+              <Badge status="success" text={<Text type="secondary" style={{ fontSize: 12 }}>Transfer In</Text>} />
+              <Badge status="default" text={<Text type="secondary" style={{ fontSize: 12, opacity: 0.6 }}>Transfer Out</Text>} />
             </div>
-          ) : (
-            <Alert
-              message="No immediate transfers recommended based on current strategy."
-              type="info"
-              showIcon
+
+            {/* Explanations Section */}
+            {recommendations?.suggestedTransfers && recommendations.suggestedTransfers.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {generateTransferExplanations(recommendations.suggestedTransfers).map(({ index, reason }) => (
+                  <TransferExplanation
+                    key={index}
+                    explanation={reason}
+                    index={index}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Alert
+                message="No immediate transfers recommended based on current strategy."
+                type="info"
+                showIcon
+              />
+            )}
+          </Card>
+
+          {/* Squad Sections */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Goalkeepers */}
+            <SquadSection
+              title="Goalkeepers"
+              players={squadWithCaptaincy.GKP}
+              explanation={generateGKPExplanation(squadWithCaptaincy.GKP)}
+              rowClassName={getRowClassName}
+              extraColumns={performanceScoreColumn}
             />
-          )}
-        </Card>
 
-        {/* Squad Sections */}
-        <div>
-          {/* Goalkeepers */}
-          <SquadSection
-            title="Goalkeepers"
-            players={squadWithCaptaincy.GKP}
-            explanation={generateGKPExplanation(squadWithCaptaincy.GKP)}
-            rowClassName={getRowClassName}
-            extraColumns={performanceScoreColumn}
-          />
+            {/* Defenders */}
+            <SquadSection
+              title="Defenders"
+              players={squadWithCaptaincy.DEF}
+              explanation={generateOutfieldExplanation(squadWithCaptaincy.DEF, 'Defenders')}
+              rowClassName={getRowClassName}
+              extraColumns={performanceScoreColumn}
+            />
 
-          {/* Defenders */}
-          <SquadSection
-            title="Defenders"
-            players={squadWithCaptaincy.DEF}
-            explanation={generateOutfieldExplanation(squadWithCaptaincy.DEF, 'Defenders')}
-            rowClassName={getRowClassName}
-            extraColumns={performanceScoreColumn}
-          />
+            {/* Midfielders */}
+            <SquadSection
+              title="Midfielders"
+              players={squadWithCaptaincy.MID}
+              explanation={generateOutfieldExplanation(squadWithCaptaincy.MID, 'Midfielders')}
+              rowClassName={getRowClassName}
+              extraColumns={performanceScoreColumn}
+            />
 
-          {/* Midfielders */}
-          <SquadSection
-            title="Midfielders"
-            players={squadWithCaptaincy.MID}
-            explanation={generateOutfieldExplanation(squadWithCaptaincy.MID, 'Midfielders')}
-            rowClassName={getRowClassName}
-            extraColumns={performanceScoreColumn}
-          />
-
-          {/* Forwards */}
-          <SquadSection
-            title="Forwards"
-            players={squadWithCaptaincy.FWD}
-            explanation={generateOutfieldExplanation(squadWithCaptaincy.FWD, 'Forwards')}
-            rowClassName={getRowClassName}
-            extraColumns={performanceScoreColumn}
-          />
+            {/* Forwards */}
+            <SquadSection
+              title="Forwards"
+              players={squadWithCaptaincy.FWD}
+              explanation={generateOutfieldExplanation(squadWithCaptaincy.FWD, 'Forwards')}
+              rowClassName={getRowClassName}
+              extraColumns={performanceScoreColumn}
+            />
+          </div>
         </div>
       </Spin>
     </div>

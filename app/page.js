@@ -26,6 +26,7 @@ import { RecommendedTeamTab } from './components/RecommendedTeamTab'
 import { CurrentSquadTab } from './components/CurrentSquadTab'
 import { CaptaincyAnalysis } from './components/CaptaincyAnalysis'
 import { BestFixtures } from './components/BestFixtures'
+import { BenchBoostPlanner } from './components/BenchBoostPlanner'
 import {
   getTargetsTableColumns,
   getWeakPlayersTableColumns
@@ -302,6 +303,13 @@ export default function MyTeamAdvisor() {
                 },
                 {
                   key: '3',
+                  label: 'Bench Boost',
+                  children: (
+                    <BenchBoostPlanner data={data} />
+                  )
+                },
+                {
+                  key: '4',
                   label: 'Weak Links',
                   children: (
                     <StandardTable

@@ -24,14 +24,14 @@ const { Title, Text } = Typography
  * @param {Function} rowClassName - Optional function to determine row className
  * @param {Array} extraColumns - Optional extra columns to add to the table
  */
-export const SquadSection = ({ title, players, explanation, rowClassName, extraColumns = [] }) => {
+export const SquadSection = ({ title, players, explanation, rowClassName, extraColumns = [], columns: customColumns }) => {
   if (players.length === 0) return null
 
   // Count non-sold players
   const activePlayers = players.filter(p => !p.isBeingSold).length
 
-  // Combine standard columns with extra columns
-  const columns = [...getSquadTableColumns(), ...extraColumns]
+  // Use custom columns if provided, otherwise combine standard columns with extra columns
+  const columns = customColumns || [...getSquadTableColumns(), ...extraColumns]
 
   // Get icon based on title
   const getIcon = () => {
@@ -44,7 +44,7 @@ export const SquadSection = ({ title, players, explanation, rowClassName, extraC
 
   return (
     <Card
-      className="mb-6 shadow-sm"
+      className="shadow-sm"
       title={
         <Space>
           {getIcon()}
@@ -61,8 +61,7 @@ export const SquadSection = ({ title, players, explanation, rowClassName, extraC
         pagination={false}
         rowClassName={rowClassName}
       />
-      <SquadExplanation explanation={explanation} />
+      {explanation && <SquadExplanation explanation={explanation} />}
     </Card>
   )
 }
-

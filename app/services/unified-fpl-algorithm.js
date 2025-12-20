@@ -366,6 +366,40 @@ export const selectOptimalStarting11 = (squad, getFixturesForPlayer) => {
   }
 }
 
+/**
+ * Select optimal 15 players (Bench Boost optimization)
+ * 
+ * simply sums the score of all 15 players as they all play.
+ * 
+ * @param {Array} players - List of players (must be 15)
+ * @param {Function} getFixturesForPlayer - Function to get fixtures
+ * @returns {Object} { starting11, bench, formation, formationScore }
+ */
+export const selectOptimalStarting15 = (players, getFixturesForPlayer) => {
+  // Score all players
+  const scoredPlayers = players.map(player => {
+    const fixtures = getFixturesForPlayer(player.id)
+    return getPlayerPerformanceData(player, fixtures)
+  })
+
+  // Calculate total score
+  const totalScore = scoredPlayers.reduce((sum, p) => sum + (p.finalScore || 0), 0)
+
+  // Sort by score for display purposes, but everyone is a "starter"
+  const sortedPlayers = scoredPlayers.sort((a, b) => b.finalScore - a.finalScore)
+
+  // In Bench Boost, everyone starts. Bench is empty.
+  // We identify positions just for validity check if needed, but really we just want the score.
+
+  return {
+    starting11: sortedPlayers, // All 15 are "starting"
+    bench: [],
+    formation: { DEF: 5, MID: 5, FWD: 3 }, // Nominal "Max" formation (though actually 2 GKs involve)
+    formationScore: totalScore,
+    formationString: 'Bench Boost'
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // CAPTAINCY SELECTION
 // ═══════════════════════════════════════════════════════════════════════════
@@ -625,6 +659,7 @@ export default {
 
   // Starting 11
   selectOptimalStarting11,
+  selectOptimalStarting15,
 
   // Captaincy
   selectCaptainAndVice,
