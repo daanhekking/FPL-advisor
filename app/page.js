@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react'
 import {
   Layout, Tabs, Badge, Space, Dropdown, Spin, Alert, Typography, Button,
   PageHeader, Section,
-  RobotOutlined, TrophyOutlined, SwapOutlined, ReloadOutlined, SettingOutlined, DownOutlined,
+  RobotOutlined, SwapOutlined, ReloadOutlined, SettingOutlined, DownOutlined,
   formatNumber
 } from './design-system'
 import Link from 'next/link'
@@ -26,10 +26,6 @@ import { CurrentSquadTab } from './components/CurrentSquadTab'
 import { CaptaincyAnalysis } from './components/CaptaincyAnalysis'
 import { BestFixtures } from './components/BestFixtures'
 import { BenchBoostPlanner } from './components/BenchBoostPlanner'
-import {
-  getTargetsTableColumns,
-  getWeakPlayersTableColumns
-} from './components/TableColumns'
 
 const { Content } = Layout
 const { Title, Text } = Typography
@@ -247,17 +243,7 @@ export default function MyTeamAdvisor() {
               items={[
                 {
                   key: '0',
-                  label: (
-                    <span>
-                      Recommended Team
-                      {recommendations?.suggestedTransfers?.length > 0 && (
-                        <Badge
-                          count={recommendations.suggestedTransfers.length}
-                          style={{ marginLeft: 8, backgroundColor: '#52c41a' }}
-                        />
-                      )}
-                    </span>
-                  ),
+                  label: 'Recommended Team',
                   children: (
                     <RecommendedTeamTab
                       recommendations={recommendations}
@@ -280,43 +266,10 @@ export default function MyTeamAdvisor() {
                   )
                 },
                 {
-                  key: '2',
-                  label: 'All Transfer Targets',
-                  children: (
-                    <StandardTable
-                      loading={recommendationsLoading}
-                      dataSource={recommendations?.transferTargets || []}
-                      columns={[
-                        ...getTargetsTableColumns(),
-                        {
-                          title: 'AI Verdict',
-                          key: 'sentiment',
-                          render: (_, record) => (
-                            <SentimentBadge score={record.transferScore || 0} />
-                          )
-                        }
-                      ]}
-                      rowKey="id"
-                    />
-                  )
-                },
-                {
                   key: '3',
                   label: 'Bench Boost',
                   children: (
                     <BenchBoostPlanner data={data} />
-                  )
-                },
-                {
-                  key: '4',
-                  label: 'Weak Links',
-                  children: (
-                    <StandardTable
-                      loading={recommendationsLoading}
-                      dataSource={recommendations?.weakPlayers || []}
-                      columns={getWeakPlayersTableColumns()}
-                      rowKey="id"
-                    />
                   )
                 },
                 {
@@ -338,11 +291,7 @@ export default function MyTeamAdvisor() {
                 },
                 {
                   key: '7',
-                  label: (
-                    <span>
-                      <TrophyOutlined /> Captaincy Analysis
-                    </span>
-                  ),
+                  label: 'Captaincy Analysis',
                   children: (
                     <CaptaincyAnalysis
                       captaincyRecommendation={captaincyRecommendation}
