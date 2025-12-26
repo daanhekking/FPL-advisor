@@ -148,7 +148,7 @@ export const RecommendedTeamTab = ({
     }
 
     if (nextGameweeks.length === 0) {
-      return [...createPlayerColumn({ showCaptaincy: true, showBench: true }), perfCol]
+      return [createPlayerColumn({ showCaptaincy: true, showBench: true }), perfCol]
     }
 
     const gwColumns = nextGameweeks.map((gw, index) => createGameweekColumn(gw, index))
