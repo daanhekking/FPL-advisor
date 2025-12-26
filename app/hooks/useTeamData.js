@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { fetchFPLData, calculateLast3GameweeksPoints } from '../services/fpl-service'
 import { generateChipStrategy } from '../services/chip-service'
 
@@ -18,7 +18,7 @@ export const useTeamData = (teamId) => {
   const [chipStrategy, setChipStrategy] = useState([])
   const [last3PointsData, setLast3PointsData] = useState({})
 
-  const loadData = async (signal) => {
+  const loadData = useCallback(async (signal) => {
     if (!teamId) return
 
     try {
@@ -89,7 +89,7 @@ export const useTeamData = (teamId) => {
         setLoading(false)
       }
     }
-  }
+  }, [teamId])
 
   useEffect(() => {
     const abortController = new AbortController()

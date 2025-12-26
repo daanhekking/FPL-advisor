@@ -94,6 +94,18 @@ export const calculateBasePerformanceScore = (player, fixtures) => {
     score += 10
   }
 
+  // 10. Availability Penalty (CRITICAL for transfers)
+  // Penalize players heavily if they are unlikely to play (injuries, suspensions, AFCON/Asian Cup)
+  const chance = player.status === 'u' || player.status === 'i' || player.status === 's' || player.status === 'n'
+    ? (player.chance_of_playing_next_round !== null ? player.chance_of_playing_next_round : 0)
+    : 100
+
+  // Massive penalties for unavailable players to force transfers
+  if (chance === 0) score -= 500 // Definitely out (Red) - Priority Sell
+  else if (chance === 25) score -= 200 // Very unlikely (Red/Orange)
+  else if (chance === 50) score -= 100 // Unlikely (Orange)
+  else if (chance === 75) score -= 25 // Doubtful (Yellow)
+
   return {
     baseScore: score,
     nextFixture,
@@ -582,14 +594,21 @@ export const generateTransferSuggestions = ({
         if (playerIn.team !== playerOut.team && (teamCounts[playerIn.team] || 0) >= 3) continue
 
         // Calculate gain vs current player
+        // Note: playerOut.finalScore already includes the massive penalty for unavailability
+        // So gain will be huge if replacing an unavailable player (e.g. 50 - (-500) = 550 gain)
         const gain = playerIn.finalScore - playerOut.finalScore
 
         // Strategy: Only consider beneficial transfers (gain > 0)
-        // or neutral transfers if the player is injured
-        const isInjured = playerOut.chance_of_playing_next_round !== null &&
-          playerOut.chance_of_playing_next_round < 75
+        // or effectively unrelated moves if we have budget issues, but here we prioritize points.
 
-        if (gain > maxGain && (gain > 0 || isInjured)) {
+        // Priority Override: If playerOut is unavailable (chance < 50), we almost ALWAYS want to sell them
+        // The huge penalty in finalScore (-500) ensures 'gain' is massive, so standard logic handles it.
+        // We just need to ensure we don't accidentally filter it out.
+
+        const isUnavailable = playerOut.chance_of_playing_next_round !== null &&
+          playerOut.chance_of_playing_next_round < 50
+
+        if (gain > maxGain && (gain > 0 || isUnavailable)) {
           maxGain = gain
           bestTransfer = {
             out: playerOut,
@@ -651,7 +670,7 @@ export const formatScore = (score) => {
 // EXPORTS
 // ═══════════════════════════════════════════════════════════════════════════
 
-export default {
+const algorithmService = {
   // Core scoring
   calculateBasePerformanceScore,
   applyFixturePenalties,
@@ -674,4 +693,6 @@ export default {
   formatScore,
   getPositionType
 }
+
+export default algorithmService
 

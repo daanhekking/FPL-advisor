@@ -1,9 +1,8 @@
 'use client'
 
-import { Tag, Tooltip } from 'antd'
+import { Tooltip, Tag, FixtureDifficultyTag, getPositionName, formatPrice, formatPPG, calculateAvgPoints, getDifficultyColor } from '../design-system'
 import { PlayerInfo } from './PlayerInfo'
 import { FixtureChips } from './FixtureChips'
-import { getPositionName, formatPrice, formatPPG, calculateAvgPoints, getDifficultyColor } from '../utils/helpers'
 
 /**
  * Standardized table column configurations
@@ -60,9 +59,7 @@ export const createAvgDifficultyColumn = () => ({
   width: 90,
   sorter: (a, b) => a.avgDifficulty - b.avgDifficulty,
   render: (val) => (
-    <Tag color={getDifficultyColor(val)}>
-      {val !== null && val !== undefined ? val.toFixed(1) : '-'}
-    </Tag>
+    <FixtureDifficultyTag difficulty={val} />
   ),
 })
 
@@ -72,7 +69,7 @@ export const createPriceColumn = () => ({
   key: 'price',
   width: 80,
   sorter: (a, b) => a.now_cost - b.now_cost,
-  render: formatPrice,
+  render: (val) => formatPrice(val),
 })
 
 export const createFormColumn = () => ({
@@ -98,7 +95,7 @@ export const createPPGColumn = () => ({
   key: 'ppg',
   width: 70,
   sorter: (a, b) => parseFloat(a.points_per_game || 0) - parseFloat(b.points_per_game || 0),
-  render: formatPPG,
+  render: (val) => formatPPG(val),
 })
 
 export const createAvgPointsColumn = () => ({

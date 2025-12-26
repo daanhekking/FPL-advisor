@@ -2,9 +2,9 @@
 
 import React from 'react'
 import { Tag, Tooltip, Badge } from 'antd'
-import { 
-  CheckCircleFilled, 
-  ExclamationCircleFilled, 
+import {
+  CheckCircleFilled,
+  ExclamationCircleFilled,
   CloseCircleFilled,
   InfoCircleFilled,
   QuestionCircleFilled
@@ -32,16 +32,16 @@ export const FixtureDifficultyTag = ({ difficulty, showLabel = false }) => {
 
   return (
     <Tooltip title={`Difficulty: ${getLabel(difficulty)}`}>
-      <Tag 
+      <Tag
         color={getColor(difficulty)}
-        style={{ 
+        style={{
           border: 'none',
           fontWeight: 600,
           minWidth: 32,
           textAlign: 'center'
         }}
       >
-        {showLabel ? getLabel(difficulty) : difficulty.toFixed(1)}
+        {showLabel ? getLabel(difficulty) : (difficulty !== null && difficulty !== undefined ? parseFloat(difficulty).toFixed(1) : '-')}
       </Tag>
     </Tooltip>
   )
@@ -51,11 +51,11 @@ export const FixtureDifficultyTag = ({ difficulty, showLabel = false }) => {
  * StatusBadge Component
  * Standardized status badge with icon
  */
-export const StatusBadge = ({ 
-  status, 
-  text, 
+export const StatusBadge = ({
+  status,
+  text,
   icon,
-  showIcon = true 
+  showIcon = true
 }) => {
   const config = {
     success: { color: 'success', icon: <CheckCircleFilled /> },
@@ -68,7 +68,7 @@ export const StatusBadge = ({
   const { color, icon: defaultIcon } = config[status] || config.default
 
   return (
-    <Tag 
+    <Tag
       color={color}
       icon={showIcon && (icon || defaultIcon)}
       style={{ fontWeight: 500 }}
@@ -116,7 +116,7 @@ export const AvailabilityIndicator = ({ chanceOfPlaying }) => {
  */
 export const FormRating = ({ form, size = 'default' }) => {
   const formValue = parseFloat(form || 0)
-  
+
   const getColor = () => {
     // Use Ant Design standard color names
     if (formValue >= 5.0) return 'success'
@@ -134,9 +134,9 @@ export const FormRating = ({ form, size = 'default' }) => {
 
   return (
     <Tooltip title={`Form: ${getLabel()}`}>
-      <Tag 
+      <Tag
         color={getColor()}
-        style={{ 
+        style={{
           border: 'none',
           fontWeight: 600,
           fontSize: size === 'small' ? 12 : 14
@@ -155,8 +155,8 @@ export const FormRating = ({ form, size = 'default' }) => {
 export const TransferBadge = ({ type }) => {
   if (type === 'in') {
     return (
-      <Badge 
-        status="success" 
+      <Badge
+        status="success"
         text="Transfer In"
       />
     )
@@ -164,8 +164,8 @@ export const TransferBadge = ({ type }) => {
 
   if (type === 'out') {
     return (
-      <Badge 
-        status="error" 
+      <Badge
+        status="error"
         text="Transfer Out"
         style={{ opacity: 0.6 }}
       />

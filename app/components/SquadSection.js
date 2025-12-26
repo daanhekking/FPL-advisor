@@ -1,13 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Typography, Card, Space } from 'antd'
-import {
-  UserOutlined,
-  SafetyOutlined,
-  ThunderboltOutlined,
-  AimOutlined
-} from '@ant-design/icons'
+import { Typography, Card, Space, UserOutlined, SafetyOutlined, ThunderboltOutlined, AimOutlined } from '../design-system'
 import { StandardTable } from './StandardTable'
 import { getSquadTableColumns } from './TableColumns'
 import { SquadExplanation } from './SquadExplanation'

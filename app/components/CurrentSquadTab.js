@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import { Spin, Card, Typography, Row, Col, Statistic, Tooltip, Tag } from 'antd'
+import { Spin, Card, Typography, Row, Col, Statistic, Tooltip, Tag } from '../design-system'
 import { SquadSection } from './SquadSection'
 import { getDifficultyColor } from '../utils/helpers'
 import {

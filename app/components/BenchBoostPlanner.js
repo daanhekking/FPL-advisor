@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { Card, Space, Typography, Select, Slider, Button, Spin, Row, Col, Statistic, Alert } from 'antd'
-import { ThunderboltOutlined, RocketOutlined } from '@ant-design/icons'
+import { Card, Space, Typography, Select, Slider, Button, Spin, Row, Col, Statistic, Alert, ThunderboltOutlined, RocketOutlined } from '../design-system'
 import { useRecommendations } from '../hooks/useRecommendations'
 import { SquadSection } from './SquadSection'
 import { getSquadTableColumns } from './TableColumns'

@@ -1,8 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Card, Typography, Space, Tag, Alert, Divider } from 'antd'
-import { TrophyOutlined, StarOutlined, FireOutlined } from '@ant-design/icons'
+import { Card, Typography, Space, Tag, Alert, Divider, TrophyOutlined, StarOutlined, FireOutlined } from '../design-system'
 import { StandardTable } from './StandardTable'
 
 const { Title, Text } = Typography
@@ -71,16 +70,16 @@ export const CaptaincyAnalysis = ({ captaincyRecommendation, loading }) => {
       render: (_, record, index) => {
         const score = record.finalScore || record.captaincyScore || 0
         const rank = record.rank || (index + 1)
-        
+
         let color = 'default'
         if (index === 0) color = 'success'
         else if (index < 3) color = 'processing'
         else if (index < 5) color = 'warning'
-        
+
         return (
           <Space direction="vertical" size={0}>
             <Tag color={color} style={{ fontSize: 14, padding: '4px 8px' }}>
-              {score.toFixed(0)}
+              {(score || 0).toFixed(0)}
             </Tag>
             <Text type="secondary" style={{ fontSize: 11 }}>
               Rank #{rank}
@@ -137,13 +136,13 @@ export const CaptaincyAnalysis = ({ captaincyRecommendation, loading }) => {
       width: 150,
       render: (_, record) => {
         if (!record.nextFixture) return <Text type="secondary">TBD</Text>
-        
+
         const { opponent, difficulty, isHome } = record.nextFixture
-        const difficultyColor = 
-          difficulty <= 2 ? 'success' : 
-          difficulty === 3 ? 'warning' : 
-          'error'
-        
+        const difficultyColor =
+          difficulty <= 2 ? 'success' :
+            difficulty === 3 ? 'warning' :
+              'error'
+
         return (
           <Space size={4}>
             <Text style={{ fontSize: 12 }}>
@@ -162,13 +161,13 @@ export const CaptaincyAnalysis = ({ captaincyRecommendation, loading }) => {
       key: 'fixtureRating',
       width: 120,
       render: (rating) => {
-        const color = 
+        const color =
           rating === 'Excellent' ? 'success' :
-          rating === 'Good' ? 'processing' :
-          rating === 'Tough' ? 'warning' :
-          rating === 'Very Tough' ? 'error' :
-          'default'
-        
+            rating === 'Good' ? 'processing' :
+              rating === 'Tough' ? 'warning' :
+                rating === 'Very Tough' ? 'error' :
+                  'default'
+
         return <Tag color={color}>{rating || 'Unknown'}</Tag>
       }
     }
@@ -207,16 +206,16 @@ export const CaptaincyAnalysis = ({ captaincyRecommendation, loading }) => {
                 </div>
               </Space>
               <Tag color="gold" style={{ fontSize: 16, padding: '6px 12px' }}>
-                Score: {captain.captaincyScore.toFixed(0)}
+                Score: {(captain.captaincyScore || 0).toFixed(0)}
               </Tag>
             </div>
 
             {/* Key Stats */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
               gap: 12,
-              marginTop: 12 
+              marginTop: 12
             }}>
               <div>
                 <Text type="secondary" style={{ fontSize: 12 }}>Form</Text>
@@ -238,16 +237,16 @@ export const CaptaincyAnalysis = ({ captaincyRecommendation, loading }) => {
                 <br />
                 <Space size={4}>
                   <Text strong>
-                    {captain.nextFixture ? 
-                      `${captain.nextFixture.isHome ? 'vs' : '@'} ${captain.nextFixture.opponent}` : 
+                    {captain.nextFixture ?
+                      `${captain.nextFixture.isHome ? 'vs' : '@'} ${captain.nextFixture.opponent}` :
                       'TBD'
                     }
                   </Text>
                   {captain.nextFixture && (
                     <Tag color={
                       captain.nextFixture.difficulty <= 2 ? 'success' :
-                      captain.nextFixture.difficulty === 3 ? 'warning' :
-                      'error'
+                        captain.nextFixture.difficulty === 3 ? 'warning' :
+                          'error'
                     }>
                       {captain.nextFixture.difficulty}
                     </Tag>

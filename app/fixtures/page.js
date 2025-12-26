@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { 
-  Card, Typography, Tag, Space, Row, Col, 
-  Spin, Alert, Button, Layout 
-} from 'antd'
+import React, { useState, useEffect } from 'react'
+import {
+  Row, Col, Layout, PageHeader, Section, LoadingSpinner,
+  FixtureDifficultyTag, Typography, Space, Badge
+} from '../design-system'
 
-const { Title, Text } = Typography
+const { Text } = Typography
 const { Content } = Layout
 
 export default function Fixtures() {
   const [teams, setTeams] = useState([])
-  const [fixtures, setFixtures] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -25,14 +24,14 @@ export default function Fixtures() {
       // Fetch bootstrap-static data for teams
       const bootstrapResponse = await fetch('/api/fpl/bootstrap')
       const bootstrapData = await bootstrapResponse.json()
-      
+
       // Fetch fixtures
       const fixturesResponse = await fetch('/api/fpl/fixtures')
       const fixturesData = await fixturesResponse.json()
-      
+
       // Get upcoming fixtures (next 5 gameweeks)
       const upcomingFixtures = fixturesData.filter(f => !f.finished_provisional).slice(0, 50)
-      
+
       // Calculate fixture difficulty for each team
       const teamsWithFixtures = bootstrapData.teams.map(team => {
         const teamFixtures = upcomingFixtures
@@ -48,23 +47,23 @@ export default function Fixtures() {
               event: f.event
             }
           })
-        
+
         const avgDifficulty = teamFixtures.length > 0
-          ? (teamFixtures.reduce((sum, f) => sum + f.difficulty, 0) / teamFixtures.length).toFixed(1)
+          ? (teamFixtures.reduce((sum, f) => sum + f.difficulty, 0) / teamFixtures.length)
           : 0
-        
+
         return {
           id: team.id,
           name: team.name,
           shortName: team.short_name,
           fixtures: teamFixtures,
-          avgDifficulty: parseFloat(avgDifficulty)
+          avgDifficulty: avgDifficulty
         }
       })
-      
+
       // Sort by average difficulty (easier fixtures first)
       teamsWithFixtures.sort((a, b) => a.avgDifficulty - b.avgDifficulty)
-      
+
       setTeams(teamsWithFixtures)
       setLoading(false)
     } catch (err) {
@@ -74,78 +73,46 @@ export default function Fixtures() {
     }
   }
 
-  const getDifficultyColor = (difficulty) => {
-    if (difficulty <= 2) return 'difficulty-1'
-    if (difficulty === 2.5) return 'difficulty-2'
-    if (difficulty === 3) return 'difficulty-3'
-    if (difficulty === 3.5 || difficulty === 4) return 'difficulty-4'
-    return 'difficulty-5'
-  }
-
   if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <Spin size="large" tip="Loading fixtures..." />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <Alert
-        type="error"
-        message="Error"
-        description={error}
-        action={
-          <Button size="small" danger onClick={fetchFixturesData}>
-            Retry
-          </Button>
-        }
-      />
-    )
+    return <LoadingSpinner fullScreen tip="Analyzing fixture difficulty..." />
   }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Content className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-        <div style={{ marginBottom: 24 }}>
-          <Title level={2}>Fixture Difficulty</Title>
-          <Text type="secondary">
-            Upcoming fixtures for all Premier League teams (sorted by difficulty)
-          </Text>
-          <div style={{ marginTop: 16 }}>
-            <Space>
-              <Tag color="success">Easy</Tag>
-              <Tag color="warning">Medium</Tag>
-              <Tag color="error">Hard</Tag>
+        <PageHeader
+          title="Fixture Difficulty"
+          description="Upcoming fixtures for all Premier League teams (sorted by difficulty)"
+          actions={[
+            <Space key="tags">
+              <Badge status="success" text="Easy" />
+              <Badge status="warning" text="Medium" />
+              <Badge status="error" text="Hard" />
             </Space>
-          </div>
-        </div>
+          ]}
+        />
+
+        {error && (
+          <Section>
+            <Text type="danger">{error}</Text>
+          </Section>
+        )}
 
         <Row gutter={[16, 16]}>
           {teams.map((team) => (
             <Col xs={24} lg={12} key={team.id}>
-              <Card>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  marginBottom: 16
-                }}>
-                  <div>
-                    <Title level={4} style={{ margin: 0 }}>{team.name}</Title>
-                    <Text type="secondary">{team.shortName}</Text>
-                  </div>
+              <Section
+                title={team.name}
+                description={team.shortName}
+                extra={
                   <div style={{ textAlign: 'right' }}>
                     <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
                       Avg Difficulty
                     </Text>
-                    <Text strong style={{ fontSize: 24 }}>
-                      {team.avgDifficulty}
-                    </Text>
+                    <FixtureDifficultyTag difficulty={team.avgDifficulty} />
                   </div>
-                </div>
-
+                }
+              >
                 <Space direction="vertical" style={{ width: '100%' }} size="small">
                   {team.fixtures.map((fixture, idx) => (
                     <div
@@ -167,9 +134,7 @@ export default function Fixtures() {
                           {fixture.isHome ? 'vs' : '@'} {fixture.opponent}
                         </Text>
                       </Space>
-                      <Tag color={getDifficultyColor(fixture.difficulty)}>
-                        {fixture.difficulty}
-                      </Tag>
+                      <FixtureDifficultyTag difficulty={fixture.difficulty} showLabel={false} />
                     </div>
                   ))}
                   {team.fixtures.length === 0 && (
@@ -178,7 +143,7 @@ export default function Fixtures() {
                     </Text>
                   )}
                 </Space>
-              </Card>
+              </Section>
             </Col>
           ))}
         </Row>

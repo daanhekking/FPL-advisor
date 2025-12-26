@@ -1,8 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Card, Statistic, Row, Col } from 'antd'
-import { TrophyOutlined } from '@ant-design/icons'
+import { Card, Statistic, Row, Col, TrophyOutlined, formatNumber, formatPrice, formatBank } from '../design-system'
 
 /**
  * TeamStats Component
@@ -19,7 +18,7 @@ export const TeamStats = ({ data }) => {
         <Col xs={12} sm={8} md={6}>
           <Statistic
             title="Overall Rank"
-            value={data?.myTeam?.summary_overall_rank?.toLocaleString() || 'N/A'}
+            value={formatNumber(data?.myTeam?.summary_overall_rank)}
           />
         </Col>
         <Col xs={12} sm={8} md={6}>
@@ -32,13 +31,13 @@ export const TeamStats = ({ data }) => {
         <Col xs={12} sm={8} md={6}>
           <Statistic
             title="Team Value"
-            value={`£${(data?.myPicks?.entry_history?.value || 0) / 10}m`}
+            value={formatPrice(data?.myPicks?.entry_history?.value)}
           />
         </Col>
         <Col xs={12} sm={8} md={6}>
           <Statistic
             title="Bank"
-            value={`£${(data?.myPicks?.entry_history?.bank || 0) / 10}m`}
+            value={formatBank(data?.myPicks?.entry_history?.bank)}
           />
         </Col>
       </Row>

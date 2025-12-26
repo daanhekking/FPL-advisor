@@ -38,26 +38,49 @@ export const fetchFPLData = async (teamId) => {
         })
 
         // Determine the correct gameweek to fetch picks for
-        // We want the 'next' gameweek to ensure we get the reverted squad after a Free Hit
-        const nextEvent = bootstrap.events?.find(e => e.is_next)
+        // ALWAYS use the 'current' (active) gameweek first to avoid 500 errors from future GWs
         const currentEvent = bootstrap.events?.find(e => e.is_current)
-        const targetGameweek = nextEvent ? nextEvent.id : (currentEvent ? currentEvent.id : 'current')
+        let targetGameweek = currentEvent ? currentEvent.id : 1
 
-        logInfo(`Fetching picks for gameweek: ${targetGameweek} (Next: ${nextEvent?.id}, Current: ${currentEvent?.id})`)
+        logInfo(`Fetching picks for gameweek: ${targetGameweek}`)
 
-        // Fetch picks and history in parallel
-        const [picks, history] = await Promise.all([
-            monitoredFetchJSON(`/api/fpl/team/${teamId}/picks?gameweek=${targetGameweek}`, { cache: 'no-store' }, 20000, 1)
-                .catch(err => {
-                    logError('Failed to fetch team picks', err, { teamId })
-                    throw new Error(`Team picks failed: ${err.message}`)
-                }),
-            monitoredFetchJSON(`/api/fpl/team/${teamId}/history`, { cache: 'no-store' }, 20000, 1)
-                .catch(err => {
-                    logError('Failed to fetch team history', err, { teamId })
-                    throw new Error(`Team history failed: ${err.message}`)
-                })
-        ])
+        // Fetch history in parallel, but handle picks separately to allow for Free Hit logic
+        const historyPromise = monitoredFetchJSON(`/api/fpl/team/${teamId}/history`, { cache: 'no-store' }, 20000, 1)
+            .catch(err => {
+                logError('Failed to fetch team history', err, { teamId })
+                throw new Error(`Team history failed: ${err.message}`)
+            })
+
+        // Fetch initial picks
+        let picks = await monitoredFetchJSON(`/api/fpl/team/${teamId}/picks?gameweek=${targetGameweek}`, { cache: 'no-store' }, 20000, 1)
+            .catch(err => {
+                logError('Failed to fetch team picks', err, { teamId })
+                // If the error is a 404 or specifically about picks, we might want to continue with dummy picks
+                // rather than throwing and failing the whole dashboard
+                if (err.message.includes('404') || err.message.includes('not found')) {
+                    logWarn('Picks not found, using empty picks to allow dashboard to load', { teamId, targetGameweek })
+                    return { picks: [], active_chip: null, entry_history: {} }
+                }
+                throw new Error(`Team picks failed: ${err.message}`)
+            })
+
+        // CHECK FOR FREE HIT: If active, revert to previous gameweek to get permanent squad
+        if (picks.active_chip === 'freehit') {
+            logInfo(`Free Hit detected in GW${targetGameweek}. Reverting to GW${targetGameweek - 1} for permanent squad.`)
+
+            // Safety check: don't go below GW1
+            if (targetGameweek > 1) {
+                targetGameweek -= 1
+                picks = await monitoredFetchJSON(`/api/fpl/team/${teamId}/picks?gameweek=${targetGameweek}`, { cache: 'no-store' }, 20000, 1)
+                    .catch(err => {
+                        logError('Failed to revert Free Hit picks', err, { teamId })
+                        // Fallback to the FH picks if revert fails, better than crashing
+                        return picks
+                    })
+            }
+        }
+
+        const history = await historyPromise
 
         logSuccess('All FPL data fetched successfully', {
             teamId,

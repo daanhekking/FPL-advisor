@@ -1,16 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Collapse, Space, Typography, Tag, Card, Row, Col, Divider } from 'antd'
-import {
-  SwapOutlined,
-  ArrowRightOutlined,
-  TrophyOutlined,
-  FireOutlined,
-  ThunderboltOutlined,
-  DollarOutlined,
-  RiseOutlined
-} from '@ant-design/icons'
+import { Collapse, Space, Typography, Tag, Card, Row, Col, Divider, SwapOutlined, ArrowRightOutlined, TrophyOutlined, FireOutlined, ThunderboltOutlined, DollarOutlined, RiseOutlined } from '../design-system'
 
 const { Text, Paragraph } = Typography
 
@@ -23,7 +14,7 @@ const parseTransferExplanation = (explanation) => {
     buying: null,
     impact: null
   }
-  
+
   // Extract selling section
   const sellingMatch = explanation.match(/📤\s*\*\*Selling\s+([^*]+)\*\*[^:]*:\s*([^📥📈]+)/)
   if (sellingMatch) {
@@ -34,7 +25,7 @@ const parseTransferExplanation = (explanation) => {
       reasons: sellingMatch[2].split(/[;.]/).map(r => r.trim()).filter(r => r.length > 10)
     }
   }
-  
+
   // Extract buying section
   const buyingMatch = explanation.match(/📥\s*\*\*Buying\s+([^*]+)\*\*[^:]*:\s*([^📈]+)/)
   if (buyingMatch) {
@@ -45,13 +36,13 @@ const parseTransferExplanation = (explanation) => {
       reasons: buyingMatch[2].split(/[;.]/).map(r => r.trim()).filter(r => r.length > 10)
     }
   }
-  
+
   // Extract impact section
   const impactMatch = explanation.match(/📈\s*\*\*Expected Impact[^:]*:\*\*\s*([^.]+\.)/)
   if (impactMatch) {
     sections.impact = impactMatch[1].trim()
   }
-  
+
   return sections
 }
 
@@ -60,41 +51,41 @@ const parseTransferExplanation = (explanation) => {
  */
 const extractMetrics = (text) => {
   const metrics = []
-  
+
   // Form
   const formMatch = text.match(/form[:\s]+([0-9.]+)/i)
   if (formMatch) {
     const value = parseFloat(formMatch[1])
     metrics.push({
       label: 'Form',
-      value: value.toFixed(1),
+      value: (value || 0).toFixed(1),
       color: value >= 5 ? 'success' : value >= 4 ? 'processing' : 'warning'
     })
   }
-  
+
   // Points
   const pointsMatch = text.match(/([0-9]+)\s+pts/)
   if (pointsMatch) {
     metrics.push({ label: 'Points', value: pointsMatch[1], color: 'default' })
   }
-  
+
   // Price
   const priceMatch = text.match(/£([0-9.]+)m/)
   if (priceMatch) {
     metrics.push({ label: 'Price', value: `£${priceMatch[1]}m`, color: 'default' })
   }
-  
+
   // Difficulty
   const diffMatch = text.match(/(?:difficulty|diff)[:\s]+([0-9.]+)/i)
   if (diffMatch) {
     const value = parseFloat(diffMatch[1])
     metrics.push({
       label: 'Fixtures',
-      value: value.toFixed(1),
+      value: (value || 0).toFixed(1),
       color: value <= 2.5 ? 'success' : value <= 3.5 ? 'warning' : 'error'
     })
   }
-  
+
   return metrics
 }
 
@@ -103,11 +94,11 @@ const extractMetrics = (text) => {
  */
 const renderPlayerCard = (playerData, type) => {
   if (!playerData) return null
-  
+
   const isSelling = type === 'selling'
   const icon = isSelling ? <SwapOutlined /> : <ThunderboltOutlined />
   const titleColor = isSelling ? '#ff4d4f' : '#52c41a'
-  
+
   return (
     <Card
       size="small"
@@ -129,12 +120,12 @@ const renderPlayerCard = (playerData, type) => {
             </Text>
           )}
         </Space>
-        
+
         {/* Player name */}
         <Text strong style={{ fontSize: 16 }}>
           {playerData.player}
         </Text>
-        
+
         {/* Metrics */}
         {playerData.reasons.length > 0 && (
           <Space size={4} wrap>
@@ -145,9 +136,9 @@ const renderPlayerCard = (playerData, type) => {
             ))}
           </Space>
         )}
-        
+
         <Divider style={{ margin: '8px 0' }} />
-        
+
         {/* Reasons */}
         <Space direction="vertical" size={4} style={{ width: '100%' }}>
           <Text type="secondary" strong style={{ fontSize: 12 }}>
@@ -174,9 +165,9 @@ const renderPlayerCard = (playerData, type) => {
  */
 export const TransferExplanation = ({ explanation, index }) => {
   if (!explanation) return null
-  
+
   const sections = parseTransferExplanation(explanation)
-  
+
   // Fallback to simple rendering if parsing fails
   if (!sections.selling && !sections.buying) {
     return (
@@ -198,11 +189,11 @@ export const TransferExplanation = ({ explanation, index }) => {
       />
     )
   }
-  
+
   // Create a summary for the collapsed header
   const sellingPlayer = sections.selling?.player || 'Player'
   const buyingPlayer = sections.buying?.player || 'Player'
-  
+
   return (
     <Collapse
       size="small"
@@ -230,24 +221,24 @@ export const TransferExplanation = ({ explanation, index }) => {
                   {renderPlayerCard(sections.buying, 'buying')}
                 </Col>
               </Row>
-              
+
               {/* Arrow indicator for mobile */}
               <div style={{ textAlign: 'center', display: 'block' }}>
-                <ArrowRightOutlined 
-                  style={{ 
-                    fontSize: 24, 
+                <ArrowRightOutlined
+                  style={{
+                    fontSize: 24,
                     color: '#1890ff',
                     transform: 'rotate(90deg)'
-                  }} 
+                  }}
                   className="md:rotate-0"
                 />
               </div>
-              
+
               {/* Expected Impact */}
               {sections.impact && (
                 <Card
                   size="small"
-                  style={{ 
+                  style={{
                     background: 'rgba(24, 144, 255, 0.05)',
                     borderColor: '#1890ff'
                   }}

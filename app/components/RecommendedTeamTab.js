@@ -1,8 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Spin, Alert, Space, Typography, Tag, Badge, Select, Button, Card, Tooltip } from 'antd'
-import { TrophyOutlined, CheckOutlined } from '@ant-design/icons'
+import { Spin, Alert, Space, Typography, Tag, Badge, Select, Button, Card, Tooltip, TrophyOutlined, CheckOutlined } from '../design-system'
 import { SquadSection } from './SquadSection'
 import { TransferExplanation } from './TransferExplanation'
 import {
@@ -129,8 +128,8 @@ export const RecommendedTeamTab = ({
         return (
           <Space direction="vertical" size={0} style={{ width: '100%' }}>
             <Tooltip title={`${label} performance expected`}>
-              <Tag color={color} style={{ fontSize: 13, padding: '4px 8px', minWidth: 60, margin: 0 }}>
-                {score.toFixed(0)}
+              <Tag color={color} style={{ fontSize: 13, padding: '2px 8px', margin: 0 }}>
+                {(score || 0).toFixed(0)}
               </Tag>
             </Tooltip>
             {rank && (
@@ -210,7 +209,7 @@ export const RecommendedTeamTab = ({
                             const boughtPrice = transfer.in.now_cost / 10
                             return sum + (soldPrice - boughtPrice)
                           }, 0)
-                          return `£${costGain.toFixed(1)}m`
+                          return `£${(costGain || 0).toFixed(1)}m`
                         })()}
                       </Text>
                     </Space>

@@ -8,11 +8,11 @@ export const revalidate = 0
 async function fetchWithAgent(url, options = {}) {
   const https = await import('https')
   const http = await import('http')
-  
+
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url)
     const protocol = urlObj.protocol === 'https:' ? https : http
-    
+
     const requestOptions = {
       hostname: urlObj.hostname,
       port: urlObj.port,
@@ -21,14 +21,14 @@ async function fetchWithAgent(url, options = {}) {
       headers: options.headers || {},
       rejectUnauthorized: false
     }
-    
+
     const req = protocol.request(requestOptions, (res) => {
       let data = ''
-      
+
       res.on('data', (chunk) => {
         data += chunk
       })
-      
+
       res.on('end', () => {
         resolve({
           ok: res.statusCode >= 200 && res.statusCode < 300,
@@ -39,18 +39,18 @@ async function fetchWithAgent(url, options = {}) {
         })
       })
     })
-    
+
     req.on('error', (error) => {
       reject(error)
     })
-    
+
     if (options.timeout) {
       req.setTimeout(options.timeout, () => {
         req.destroy()
         reject(new Error('Request timeout'))
       })
     }
-    
+
     req.end()
   })
 }
@@ -96,7 +96,43 @@ export async function GET(request, { params }) {
       }
     )
 
+    // Handle 404 (picks not available for this gameweek yet)
+    if (response.status === 404 && gameweek > 1) {
+      console.log(`Picks for GW${gameweek} not found. Falling back to GW${gameweek - 1}`)
+
+      const fallbackResponse = await fetchWithAgent(
+        `https://fantasy.premierleague.com/api/entry/${teamId}/event/${gameweek - 1}/picks/`,
+        {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+            'Accept': 'application/json'
+          },
+          timeout: 30000
+        }
+      )
+
+      if (fallbackResponse.ok) {
+        const data = await fallbackResponse.json()
+        return NextResponse.json({
+          ...data,
+          _is_fallback: true,
+          _fallback_gameweek: gameweek - 1,
+          _original_gameweek: gameweek
+        }, {
+          headers: { 'Cache-Control': 'no-store, max-age=0' }
+        })
+      }
+    }
+
     if (!response.ok) {
+      // Return a 404 instead of a 500 if the FPL API returned 404
+      if (response.status === 404) {
+        return NextResponse.json({
+          error: 'Picks not found for this gameweek',
+          gameweek,
+          teamId
+        }, { status: 404 })
+      }
       throw new Error(`FPL API returned ${response.status}`)
     }
 
@@ -109,7 +145,7 @@ export async function GET(request, { params }) {
     })
   } catch (error) {
     console.error('Picks API error:', error)
-    
+
     return NextResponse.json({
       error: error.message || 'Failed to fetch picks data',
       teamId: params.teamId,

@@ -2,53 +2,55 @@
 
 import React from 'react'
 import {
-  Layout, Card, Typography, Divider, Space, Row, Col, Tag, List, Alert
-} from 'antd'
-import {
-  CheckCircleOutlined, TrophyOutlined, SwapOutlined,
-  TeamOutlined, SettingOutlined, InfoCircleOutlined,
+  Layout, Typography, Divider, Space, Row, Col, Tag, List, Alert,
+  PageHeader, Section, Badge,
+  CheckCircleFilled, TrophyOutlined, SwapOutlined,
+  TeamOutlined, SettingOutlined, InfoCircleFilled,
   ApiOutlined, DatabaseOutlined, CloudOutlined, ExperimentOutlined
-} from '@ant-design/icons'
+} from '../design-system'
 import Link from 'next/link'
 
 const { Content } = Layout
-const { Title, Paragraph, Text } = Typography
+const { Paragraph, Text } = Typography
 
 export default function AlgorithmSetupPage() {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Content className="p-4 md:p-8 max-w-5xl mx-auto w-full">
         {/* Header */}
-        <div className="mb-6">
-          <Link href="/" style={{ color: '#1890ff' }}>
-            ← Back to Dashboard
-          </Link>
-          <Title level={2} className="!mt-4 flex items-center gap-2">
-            <SettingOutlined className="text-blue-500" /> Algorithm Setup & Data Sources
-          </Title>
-          <Text type="secondary">
-            Understanding how the AI Coach analyzes data and makes transfer recommendations
-          </Text>
-        </div>
+        <PageHeader
+          title="Algorithm Setup & Data Sources"
+          description="Understanding how the AI Coach analyzes data and makes transfer recommendations"
+          icon={<SettingOutlined style={{ color: '#1890ff' }} />}
+          actions={[
+            <Link key="back" href="/" passHref>
+              <Text style={{ color: '#1890ff', cursor: 'pointer' }}>
+                ← Back to Dashboard
+              </Text>
+            </Link>
+          ]}
+        />
 
         {/* Data Sources Section */}
-        <Card className="mb-6">
-          <Title level={3}>
-            <DatabaseOutlined /> Data Sources & APIs
-          </Title>
-          <Paragraph>
-            The AI Coach integrates multiple data sources to provide comprehensive analysis and recommendations. Here&apos;s an overview of where the data comes from:
-          </Paragraph>
-
-          <Space direction="vertical" size="large" style={{ width: '100%', marginTop: '16px' }}>
+        <Section
+          title="Data Sources & APIs"
+          icon={<DatabaseOutlined />}
+          description="The AI Coach integrates multiple data sources to provide comprehensive analysis and recommendations."
+        >
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
             {/* FPL Official API */}
-            <Card size="small" style={{ borderLeft: '4px solid #1890ff' }}>
-              <Space direction="vertical" style={{ width: '100%' }}>
+            <Section
+              size="small"
+              style={{ borderLeft: '4px solid #1890ff', marginBottom: 0 }}
+              title={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <ApiOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
                   <Text strong style={{ fontSize: '16px' }}>Official FPL API</Text>
                   <Tag color="green">Active</Tag>
                 </div>
+              }
+            >
+              <Space direction="vertical" style={{ width: '100%' }}>
                 <Paragraph style={{ marginBottom: '8px' }}>
                   <Text strong>Source:</Text> <code>fantasy.premierleague.com/api/</code>
                 </Paragraph>
@@ -68,7 +70,7 @@ export default function AlgorithmSetupPage() {
                   <Text type="secondary"><strong>Update Frequency:</strong> Real-time (no caching) - always fetches latest data</Text>
                 </Paragraph>
               </Space>
-            </Card>
+            </Section>
 
             {/* Future Data Sources - Minimized */}
             <Alert
@@ -85,7 +87,7 @@ export default function AlgorithmSetupPage() {
                   </Text>
                 </Space>
               }
-              type="default"
+              type="info"
               showIcon={false}
               style={{ opacity: 0.7 }}
             />
@@ -97,16 +99,15 @@ export default function AlgorithmSetupPage() {
             description="Your FPL team ID is stored locally in your browser. No personal data is sent to external servers. All API calls are made directly to official FPL endpoints through secure proxy routes."
             type="info"
             showIcon
-            icon={<InfoCircleOutlined />}
+            icon={<InfoCircleFilled />}
           />
-        </Card>
+        </Section>
 
         {/* Step-by-Step Logic */}
-        <Card className="mb-6">
-          <Title level={3}>
-            <CheckCircleOutlined /> Step-by-Step Decision Process
-          </Title>
-          
+        <Section
+          title="Step-by-Step Decision Process"
+          icon={<CheckCircleFilled style={{ color: '#52c41a' }} />}
+        >
           <List
             itemLayout="horizontal"
             dataSource={[
@@ -184,20 +185,17 @@ export default function AlgorithmSetupPage() {
               </List.Item>
             )}
           />
-        </Card>
+        </Section>
 
         {/* FPL Formation Rules */}
-        <Card className="mb-6">
-          <Title level={3}>
-            <TeamOutlined /> FPL Formation Rules
-          </Title>
+        <Section title="FPL Formation Rules" icon={<TeamOutlined />}>
           <Paragraph>
             The algorithm strictly adheres to Fantasy Premier League formation rules:
           </Paragraph>
-          
+
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
-              <Card size="small" title="Starting 11 Requirements">
+              <Section size="small" title="Starting 11 Requirements" style={{ height: '100%' }}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Text>• <strong>Exactly 1</strong> Goalkeeper</Text>
                   <Text>• <strong>3-5</strong> Defenders</Text>
@@ -206,11 +204,11 @@ export default function AlgorithmSetupPage() {
                   <Divider style={{ margin: '8px 0' }} />
                   <Text strong>Total: 11 players</Text>
                 </Space>
-              </Card>
+              </Section>
             </Col>
-            
+
             <Col xs={24} md={12}>
-              <Card size="small" title="Squad Composition">
+              <Section size="small" title="Squad Composition" style={{ height: '100%' }}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Text>• <strong>2</strong> Goalkeepers (1 starts, 1 bench)</Text>
                   <Text>• <strong>5</strong> Defenders</Text>
@@ -219,7 +217,7 @@ export default function AlgorithmSetupPage() {
                   <Divider style={{ margin: '8px 0' }} />
                   <Text strong>Total: 15 players</Text>
                 </Space>
-              </Card>
+              </Section>
             </Col>
           </Row>
 
@@ -240,36 +238,32 @@ export default function AlgorithmSetupPage() {
             }
             type="info"
             showIcon
-            icon={<InfoCircleOutlined />}
+            icon={<InfoCircleFilled />}
           />
-        </Card>
+        </Section>
 
         {/* Transfer Decision Logic */}
-        <Card className="mb-6">
-          <Title level={3}>
-            <SwapOutlined /> Transfer Decision Logic
-          </Title>
-          
+        <Section title="Transfer Decision Logic" icon={<SwapOutlined />}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div>
               <Text strong style={{ fontSize: '16px' }}>When to Make Transfers:</Text>
               <List size="small" style={{ marginTop: '8px' }}>
                 <List.Item>
-                  <CheckCircleOutlined style={{ color: '#52c41a', marginRight: '8px' }} />
+                  <Badge status="success" style={{ marginRight: '8px' }} />
                   <strong>2 Free Transfers Available:</strong> Will use 1-2 transfers depending on upgrade quality
                 </List.Item>
                 <List.Item>
-                  <CheckCircleOutlined style={{ color: '#52c41a', marginRight: '8px' }} />
+                  <Badge status="success" style={{ marginRight: '8px' }} />
                   <strong>1 Free Transfer Available:</strong> Will use it if a good upgrade is found
                 </List.Item>
                 <List.Item>
-                  <CheckCircleOutlined style={{ color: '#faad14', marginRight: '8px' }} />
+                  <Badge status="warning" style={{ marginRight: '8px' }} />
                   <strong>0 Free Transfers:</strong> Will only take a hit (-4 points) if multiple starters are injured
                 </List.Item>
               </List>
             </div>
 
-          <div>
+            <div>
               <Text strong style={{ fontSize: '16px' }}>Transfer Criteria:</Text>
               <List size="small" style={{ marginTop: '8px' }}>
                 <List.Item>
@@ -297,17 +291,14 @@ export default function AlgorithmSetupPage() {
               showIcon
             />
           </Space>
-        </Card>
+        </Section>
 
         {/* Unified Performance Scoring & Captaincy */}
-        <Card className="mb-6">
-          <Title level={3}>
-            <TrophyOutlined /> Unified Performance Scoring
-          </Title>
+        <Section title="Unified Performance Scoring" icon={<TrophyOutlined />}>
           <Paragraph>
             The app uses a single, consistent performance scoring algorithm for both selecting the starting 11 AND choosing the captain. This ensures your best players both start and captain.
           </Paragraph>
-          
+
           <Alert
             message="Performance Score Formula - Used For Starting 11 & Captain Selection"
             description={
@@ -336,7 +327,7 @@ export default function AlgorithmSetupPage() {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
-              <Card size="small" title="Fixture Impact" style={{ borderLeft: '3px solid #1890ff' }}>
+              <Section size="small" title="Fixture Impact" style={{ borderLeft: '3px solid #1890ff', height: '100%' }}>
                 <Space direction="vertical" size="small" style={{ width: '100%' }}>
                   <Text strong>Fixture Bonuses & Penalties:</Text>
                   <Text><Tag color="green">Difficulty 1</Tag> <strong>+40 points</strong> - Very Easy</Text>
@@ -349,11 +340,11 @@ export default function AlgorithmSetupPage() {
                     Note: Fixtures are a BONUS, not a gatekeeper. Premium players with tough fixtures can still be captain if their overall score is highest.
                   </Text>
                 </Space>
-              </Card>
+              </Section>
             </Col>
-            
+
             <Col xs={24} md={12}>
-              <Card size="small" title="Why This Unified Approach" style={{ borderLeft: '3px solid #52c41a' }}>
+              <Section size="small" title="Why This Unified Approach" style={{ borderLeft: '3px solid #52c41a', height: '100%' }}>
                 <Space direction="vertical" size="small">
                   <Text>✓ <strong>Consistency</strong> - Same logic everywhere in the app</Text>
                   <Text>✓ <strong>Quality First</strong> - Premium players properly valued</Text>
@@ -361,11 +352,12 @@ export default function AlgorithmSetupPage() {
                   <Text>✓ <strong>Transparent</strong> - See exactly why players rank as they do</Text>
                   <Text>✓ <strong>Predictable</strong> - Highest score = Captain = Starts</Text>
                 </Space>
-              </Card>
+              </Section>
             </Col>
           </Row>
 
           <Alert
+            className="mt-4"
             message="Example: Haaland vs Mateta"
             description={
               <div>
@@ -419,60 +411,57 @@ export default function AlgorithmSetupPage() {
               This ensures your top performers are always starting AND captaining - perfect consistency!
             </Paragraph>
           </div>
-        </Card>
+        </Section>
 
         {/* Fixture Difficulty Strategy */}
-        <Card className="mb-6">
-          <Title level={3}>
-            <InfoCircleOutlined /> Fixture Difficulty Strategy
-          </Title>
+        <Section title="Fixture Difficulty Strategy" icon={<InfoCircleFilled />}>
           <Paragraph>
             The algorithm intelligently handles fixture difficulty when selecting your starting 11:
           </Paragraph>
-          
+
           <Space direction="vertical" size="large" style={{ width: '100%', marginTop: '16px' }}>
-          <Alert
-            message="Fixture Difficulty Rules"
-            description={
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text>
-                  <strong>Moderate Fixtures (3):</strong> 30% score penalty for players outside the top 10.
-                </Text>
-                <Text>
-                  <strong>Hard Fixtures (4-5):</strong> 60% score penalty for players outside the top 20.
-                </Text>
-                <Divider style={{ margin: '8px 0' }} />
-                <Text strong style={{ color: '#52c41a' }}>
-                  ✓ Top 10 players: Immune to all fixture penalties (1-5)
-                </Text>
-                <Text strong style={{ color: '#1890ff' }}>
-                  ✓ Top 11-20 players: Immune to hard fixture penalties (4-5), but 30% penalty for moderate (3)
-                </Text>
-              </Space>
-            }
-            type="info"
-            showIcon
-          />
+            <Alert
+              message="Fixture Difficulty Rules"
+              description={
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text>
+                    <strong>Moderate Fixtures (3):</strong> 30% score penalty for players outside the top 10.
+                  </Text>
+                  <Text>
+                    <strong>Hard Fixtures (4-5):</strong> 60% score penalty for players outside the top 20.
+                  </Text>
+                  <Divider style={{ margin: '8px 0' }} />
+                  <Text strong style={{ color: '#52c41a' }}>
+                    ✓ Top 10 players: Immune to all fixture penalties (1-5)
+                  </Text>
+                  <Text strong style={{ color: '#1890ff' }}>
+                    ✓ Top 11-20 players: Immune to hard fixture penalties (4-5), but 30% penalty for moderate (3)
+                  </Text>
+                </Space>
+              }
+              type="info"
+              showIcon
+            />
 
             <Row gutter={[16, 16]}>
               <Col xs={24} md={12}>
-                <Card size="small" title="Why This Matters" style={{ borderLeft: '3px solid #faad14' }}>
+                <Section size="small" title="Why This Matters" style={{ borderLeft: '3px solid #faad14', height: '100%' }}>
                   <Space direction="vertical" size="small">
                     <Text>• Mid-tier players facing moderate opponents (3) have uncertain returns</Text>
                     <Text>• Defenders facing top teams (4-5) are unlikely to keep clean sheets</Text>
                     <Text>• Better to bench them and use players with easier fixtures</Text>
                   </Space>
-                </Card>
+                </Section>
               </Col>
-              
+
               <Col xs={24} md={12}>
-                <Card size="small" title="Elite Players Tiers" style={{ borderLeft: '3px solid #52c41a' }}>
+                <Section size="small" title="Elite Players Tiers" style={{ borderLeft: '3px solid #52c41a', height: '100%' }}>
                   <Space direction="vertical" size="small">
                     <Text><strong>Top 10:</strong> Always considered, even for moderate fixtures (e.g., Salah vs Chelsea)</Text>
                     <Text><strong>Top 11-20:</strong> Considered for hard fixtures but penalized for moderate ones</Text>
                     <Text><strong>Others:</strong> Penalized for both moderate and hard fixtures</Text>
                   </Space>
-                </Card>
+                </Section>
               </Col>
             </Row>
 
@@ -497,7 +486,7 @@ export default function AlgorithmSetupPage() {
                     <li><strong>Top 11-20 player:</strong> 30% penalty, might be benched</li>
                     <li><strong>Regular player:</strong> 30% penalty, likely benched</li>
                   </ul>
-                  
+
                   <Text strong style={{ display: 'block', marginBottom: '8px' }}>Scenario 2: Hard Fixture (Difficulty 5)</Text>
                   <ul style={{ marginTop: '8px', marginBottom: '0', paddingLeft: '20px' }}>
                     <li><strong>Top 20 player (e.g., Haaland):</strong> Full score, will start</li>
@@ -509,20 +498,17 @@ export default function AlgorithmSetupPage() {
               showIcon
             />
           </Space>
-        </Card>
+        </Section>
 
         {/* Algorithm Flow Visualization */}
-        <Card className="mb-6">
-          <Title level={3}>
-            <ExperimentOutlined /> Algorithm Flow Visualization
-          </Title>
+        <Section title="Algorithm Flow Visualization" icon={<ExperimentOutlined />}>
           <Paragraph>
             Here&apos;s how the unified algorithm processes your team step-by-step:
           </Paragraph>
-          
+
           <div style={{ background: '#f5f5f5', padding: '24px', borderRadius: '8px', fontFamily: 'monospace', fontSize: '13px', overflowX: 'auto' }}>
-            <pre style={{ margin: 0, whiteSpace: 'pre' }}>
-{`┌─────────────────────────────────────────────────────────────┐
+            <pre style={{ margin: 0, whiteSpace: 'pre', color: '#333' }}>
+              {`┌─────────────────────────────────────────────────────────────┐
 │                   YOUR 15-PLAYER SQUAD                      │
 └─────────────────────────┬───────────────────────────────────┘
                           │
@@ -533,19 +519,19 @@ export default function AlgorithmSetupPage() {
               └───────────┬───────────┘
                           │
         For each player:  │
-        • Total Points × 3                = Quality
-        • Form × 20                       = Recent Performance
-        • Price × 15                      = Manager Assessment
-        • PPG × 10                        = Consistency
-        • Goals × 8 + Assists × 5         = Output
+        • Total Points x 3                = Quality
+        • Form x 20                       = Recent Performance
+        • Price x 15                      = Manager Assessment
+        • PPG x 10                        = Consistency
+        • Goals x 8 + Assists x 5         = Output
         • Fixture Bonus/Penalty           = Match Difficulty
         • Home Bonus (+8)                 = Home Advantage
-        • Ownership ≥50% (+10)            = Template Player
+        • Ownership >= 50% (+10)          = Template Player
                           │
                           ▼
               ┌───────────────────────┐
               │  SORT BY BASE SCORE   │
-              │  Highest → Lowest     │
+              │  Highest -> Lowest     │
               └───────────┬───────────┘
                           │
                           ▼
@@ -554,56 +540,56 @@ export default function AlgorithmSetupPage() {
               └───────────┬───────────┘
                           │
                           ▼
-         ┌────────────────────────────────────┐
-         │     APPLY FIXTURE PENALTIES        │
-         │   (Based on rank & difficulty)     │
-         └────────────┬───────────────────────┘
-                      │
-         ┌────────────┴────────────┐
-         │                         │
-         ▼                         ▼
-   Rank 1-10                 Rank 11-15
-  (Elite Players)           (Other Players)
-         │                         │
-   NO PENALTIES            ├─ Diff 3? → -30%
-         │                 ├─ Diff 4-5 & Rank 11-20? → Immune
-         │                 └─ Diff 4-5 & Rank 21+? → -60%
-         │                         │
-         └────────────┬────────────┘
+          ┌────────────────────────────────────┐
+          │     APPLY FIXTURE PENALTIES        │
+          │   (Based on rank & difficulty)     │
+          └────────────┬───────────────────────┘
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+    Rank 1-10                 Rank 11-15
+   (Elite Players)           (Other Players)
+          │                         │
+    NO PENALTIES            ├─ Diff 3? -> -30%
+          │                 ├─ Diff 4-5 & Rank 11-20? -> Immune
+          │                 └─ Diff 4-5 & Rank 21+? -> -60%
+          │                         │
+          └────────────┬────────────┘
+                       │
+                       ▼
+          ┌────────────────────────┐
+          │   ALL PLAYERS HAVE     │
+          │   FINAL SCORE          │
+          └────────────┬───────────┘
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+    ┌─────────────┐         ┌─────────────┐
+    │  STARTING   │         │  CAPTAINCY  │
+    │  11 LOGIC   │         │  SELECTION  │
+    └──────┬──────┘         └──────┬──────┘
+           │                       │
+           │ Try 8 formations      │ Captain = Highest
+           │ Pick best by score    │ Vice = 2nd Highest
+           │                       │
+           ▼                       ▼
+    Starting 11              Captain & Vice
+    + Bench (4)              (From Starting 11)
+           │                       │
+           └──────────┬────────────┘
                       │
                       ▼
-         ┌────────────────────────┐
-         │   ALL PLAYERS HAVE     │
-         │   FINAL SCORE          │
-         └────────────┬───────────┘
+           ┌──────────────────────┐
+           │   TRANSFER LOGIC     │
+           └──────────┬───────────┘
                       │
-         ┌────────────┴────────────┐
-         │                         │
-         ▼                         ▼
-   ┌─────────────┐         ┌─────────────┐
-   │  STARTING   │         │  CAPTAINCY  │
-   │  11 LOGIC   │         │  SELECTION  │
-   └──────┬──────┘         └──────┬──────┘
-          │                       │
-          │ Try 8 formations      │ Captain = Highest
-          │ Pick best by score    │ Vice = 2nd Highest
-          │                       │
-          ▼                       ▼
-   Starting 11              Captain & Vice
-   + Bench (4)              (From Starting 11)
-          │                       │
-          └──────────┬────────────┘
-                     │
-                     ▼
-          ┌──────────────────────┐
-          │   TRANSFER LOGIC     │
-          └──────────┬───────────┘
-                     │
-        Only transfers │ Must improve
-        starting 11    │ starting 11 score
-                     │
-                     ▼
-          Recommended Transfers`}
+         Only transfers │ Must improve
+         starting 11    │ starting 11 score
+                      │
+                      ▼
+           Recommended Transfers`}
             </pre>
           </div>
 
@@ -614,15 +600,14 @@ export default function AlgorithmSetupPage() {
             type="success"
             showIcon
           />
-        </Card>
+        </Section>
 
         {/* Example Scenario */}
-        <Card className="mb-6">
-          <Title level={4}>Example Scenario</Title>
+        <Section title="Example Scenario">
           <Paragraph>
             <Text strong>Situation:</Text> You have 2 free transfers available.
           </Paragraph>
-          
+
           <Space direction="vertical" size="small" style={{ width: '100%', marginTop: '16px' }}>
             <Text>1. Algorithm selects your optimal starting 11 from current squad</Text>
             <Text>2. Identifies that your starting midfielder has form of 1.5 (poor)</Text>
@@ -632,7 +617,7 @@ export default function AlgorithmSetupPage() {
             <Text>6. Transfer is recommended: Poor midfielder OUT → Good midfielder IN</Text>
             <Text>7. Evaluates if a second transfer is worthwhile - if not, saves the 2nd FT</Text>
           </Space>
-        </Card>
+        </Section>
 
       </Content>
     </Layout>

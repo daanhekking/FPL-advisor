@@ -1,14 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+// Design System
 import {
-  Layout, Tabs, Card, Button, Typography,
-  Space, Dropdown, Spin, Alert, Badge
-} from 'antd'
-import {
-  SwapOutlined, ReloadOutlined, DownOutlined,
-  RobotOutlined, SettingOutlined, TrophyOutlined
-} from '@ant-design/icons'
+  Layout, Tabs, Badge, Space, Dropdown, Spin, Alert, Typography, Button,
+  PageHeader, Section,
+  RobotOutlined, TrophyOutlined, SwapOutlined, ReloadOutlined, SettingOutlined, DownOutlined,
+  formatNumber
+} from './design-system'
 import Link from 'next/link'
 
 // Custom Hooks
@@ -208,40 +207,40 @@ export default function MyTeamAdvisor() {
           )}
 
           {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <div>
-              <Title level={2} className="!mb-0 flex items-center gap-2">
-                <RobotOutlined className="text-blue-500" /> FPL Assistant Coach
-              </Title>
-              <Text type="secondary">
-                AI-powered insights for {data?.myTeam?.name}
-              </Text>
-            </div>
-            <Space>
-              {renderTeamSelector()}
-              <Button
+          <PageHeader
+            title="FPL Assistant Coach"
+            description={`AI-powered insights for ${data?.myTeam?.name}`}
+            icon={<RobotOutlined style={{ color: '#1890ff' }} />}
+            actions={[
+              renderTeamSelector(),
+              <Dropdown.Button
+                key="shuffle"
                 icon={<SwapOutlined />}
                 onClick={() => setRandomSeed(s => s + 1)}
                 title="Shuffle transfer suggestions"
               >
                 Shuffle
-              </Button>
-              <Link href="/settings">
-                <Button icon={<SettingOutlined />}>
+              </Dropdown.Button>,
+              <Link key="settings" href="/settings" passHref>
+                <Dropdown.Button icon={<SettingOutlined />}>
                   Algorithm Setup
-                </Button>
-              </Link>
-              <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
+                </Dropdown.Button>
+              </Link>,
+              <Dropdown.Button
+                key="refresh"
+                icon={<ReloadOutlined />}
+                onClick={handleRefresh}
+              >
                 Refresh
-              </Button>
-            </Space>
-          </div>
+              </Dropdown.Button>
+            ]}
+          />
 
           {/* Team Stats */}
           <TeamStats data={data} />
 
           {/* Main Dashboard */}
-          <Card className="mb-6">
+          <Section>
             <Tabs
               activeKey={activeTab}
               onChange={setActiveTab}
@@ -321,7 +320,7 @@ export default function MyTeamAdvisor() {
                   )
                 },
                 {
-                  key: '4',
+                  key: '5',
                   label: 'Best Fixtures',
                   children: (
                     <BestFixtures
@@ -331,14 +330,14 @@ export default function MyTeamAdvisor() {
                   )
                 },
                 {
-                  key: '5',
+                  key: '6',
                   label: 'Chip Strategy',
                   children: (
                     <StrategyTimeline strategy={chipStrategy} />
                   )
                 },
                 {
-                  key: '6',
+                  key: '7',
                   label: (
                     <span>
                       <TrophyOutlined /> Captaincy Analysis
@@ -353,7 +352,7 @@ export default function MyTeamAdvisor() {
                 }
               ]}
             />
-          </Card>
+          </Section>
         </Content>
       </Layout>
     </>

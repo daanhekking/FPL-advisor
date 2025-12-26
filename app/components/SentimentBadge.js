@@ -1,6 +1,4 @@
-import React from 'react'
-import { Tag, Tooltip } from 'antd'
-import { FireOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons'
+import { Tag, Tooltip, FireOutlined, RiseOutlined, FallOutlined } from '../design-system'
 
 export const SentimentBadge = ({ score, showTooltip = true }) => {
     // Score is 0-10 roughly
@@ -30,7 +28,7 @@ export const SentimentBadge = ({ score, showTooltip = true }) => {
 
     if (showTooltip) {
         return (
-            <Tooltip title={`Hybrid Score: ${score.toFixed(1)}`}>
+            <Tooltip title={`Hybrid Score: ${(score || 0).toFixed(1)}`}>
                 {badge}
             </Tooltip>
         )

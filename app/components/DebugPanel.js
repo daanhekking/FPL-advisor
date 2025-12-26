@@ -3,13 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Drawer, Badge, Button, Space, Typography, Timeline, Tag, Collapse,
-  Segmented, Input, Empty, Tooltip
-} from 'antd'
-import {
-  BugOutlined, DeleteOutlined, DownloadOutlined,
+  Segmented, Input, Empty, Tooltip, BugOutlined, DeleteOutlined, DownloadOutlined,
   CloseOutlined, CheckCircleOutlined, ExclamationCircleOutlined,
   InfoCircleOutlined, WarningOutlined, ApiOutlined
-} from '@ant-design/icons'
+} from '../design-system'
 import { debugLogger } from '../utils/debug-logger'
 
 const { Text, Paragraph } = Typography
@@ -49,7 +46,7 @@ export function DebugPanel() {
     if (filter !== 'all' && log.type !== filter) {
       return false
     }
-    
+
     // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase()
@@ -58,7 +55,7 @@ export function DebugPanel() {
         JSON.stringify(log.data || {}).toLowerCase().includes(searchLower)
       )
     }
-    
+
     return true
   })
 

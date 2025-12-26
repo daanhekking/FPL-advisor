@@ -1,22 +1,22 @@
 'use client'
 
-import { Table } from 'antd'
+import { Table } from '../design-system'
 
 /**
  * Standardized table component with consistent configuration
  * Optimized for mobile with responsive pagination and scroll
  */
-export function StandardTable({ 
-  columns, 
-  dataSource, 
-  pagination = { 
+export function StandardTable({
+  columns,
+  dataSource,
+  pagination = {
     pageSize: 10,
     showSizeChanger: false,
     responsive: true,
     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`
   },
   scroll = { x: 800 },
-  ...props 
+  ...props
 }) {
   return (
     <Table

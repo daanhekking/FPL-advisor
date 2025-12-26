@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Card, Typography, Space, Tag, Button, Tooltip } from 'antd'
-import { TrophyOutlined, CalendarOutlined, DownOutlined, UpOutlined } from '@ant-design/icons'
+import { Card, Typography, Space, Tag, Button, Tooltip, TrophyOutlined, CalendarOutlined, DownOutlined, UpOutlined } from '../design-system'
 import { formatPrice, getDifficultyColor } from '../utils/helpers'
 import { FixtureChips } from './FixtureChips'
 import { StandardTable } from './StandardTable'
@@ -67,7 +66,7 @@ export const BestFixtures = ({ bestFixturesData, loading }) => {
         return (
           <Tooltip title={`${label} performance expected`}>
             <Tag color={color} style={{ fontSize: 13, padding: '2px 8px', margin: 0 }}>
-              {score.toFixed(0)}
+              {(score || 0).toFixed(0)}
             </Tag>
           </Tooltip>
         )
@@ -127,7 +126,7 @@ export const BestFixtures = ({ bestFixturesData, loading }) => {
                   <CalendarOutlined style={{ color: '#1890ff' }} />
                   <Text strong style={{ fontSize: 16 }}>{team.team.name}</Text>
                   <Tag color={getDifficultyColor(team.avgDifficulty)} style={{ marginLeft: 8 }}>
-                    {team.avgDifficulty.toFixed(1)} Diff
+                    {(team.avgDifficulty || 0).toFixed(1)} Diff
                   </Tag>
                 </Space>
                 <FixtureChips fixtures={team.fixtures} maxShow={5} />

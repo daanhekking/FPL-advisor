@@ -1,17 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Typography, Space, Divider, Tag, Collapse } from 'antd'
-import {
-  TrophyOutlined,
-  FireOutlined,
-  ThunderboltOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  SwapOutlined,
-  CalendarOutlined,
-  InfoCircleOutlined
-} from '@ant-design/icons'
+import { Typography, Space, Divider, Tag, Collapse, TrophyOutlined, FireOutlined, ThunderboltOutlined, WarningOutlined, CheckCircleOutlined, SwapOutlined, CalendarOutlined, InfoCircleOutlined } from '../design-system'
 
 const { Text, Paragraph } = Typography
 
@@ -23,18 +13,18 @@ const parseExplanation = (explanation) => {
 
   // Split by main delimiters
   const sections = explanation.split(' | ')
-  
+
   return sections.map(section => {
     // Extract section title if present
     const titleMatch = section.match(/\*\*([^*]+)\*\*:/)
     const title = titleMatch ? titleMatch[1] : null
-    
+
     // Clean up the content
     let content = section
     if (title) {
       content = content.replace(`**${title}**:`, '').trim()
     }
-    
+
     return { title, content }
   })
 }
@@ -53,7 +43,7 @@ const getIconForEmoji = (emoji) => {
     '🔄': <SwapOutlined style={{ color: '#faad14' }} />,
     '📅': <CalendarOutlined style={{ color: '#1890ff' }} />,
   }
-  
+
   return iconMap[emoji] || null
 }
 
@@ -62,7 +52,7 @@ const getIconForEmoji = (emoji) => {
  */
 const renderMetrics = (content) => {
   const metrics = []
-  
+
   // Extract form if present
   const formMatch = content.match(/form[:\s]+([0-9.]+)/i)
   if (formMatch) {
@@ -73,7 +63,7 @@ const renderMetrics = (content) => {
       color: formValue >= 5 ? 'success' : formValue >= 4 ? 'processing' : formValue >= 3 ? 'default' : 'error'
     })
   }
-  
+
   // Extract points if present
   const pointsMatch = content.match(/([0-9]+)\s+(?:total\s+)?pts/)
   if (pointsMatch) {
@@ -83,7 +73,7 @@ const renderMetrics = (content) => {
       color: 'default'
     })
   }
-  
+
   // Extract difficulty if present
   const diffMatch = content.match(/(?:difficulty|diff)[:\s]+([0-9.]+)/i)
   if (diffMatch) {
@@ -94,7 +84,7 @@ const renderMetrics = (content) => {
       color: diffValue <= 2.5 ? 'success' : diffValue <= 3.5 ? 'warning' : 'error'
     })
   }
-  
+
   return metrics
 }
 
@@ -105,18 +95,18 @@ const parsePlayerInfo = (content) => {
   // Extract player name (between ** **)
   const playerMatch = content.match(/\*\*([^*]+)\*\*/)
   const playerName = playerMatch ? playerMatch[1] : null
-  
+
   // Extract team/price info (in parentheses)
   const infoMatch = content.match(/\(([^)]+)\)/)
   const info = infoMatch ? infoMatch[1] : null
-  
+
   // Extract reasons (separated by semicolons)
   const reasonsText = content.replace(/\*\*[^*]+\*\*/g, '').replace(/\([^)]+\)/g, '')
   const reasons = reasonsText
     .split(/[;.]/)
     .map(r => r.trim())
     .filter(r => r.length > 0 && r !== '-')
-  
+
   return { playerName, info, reasons }
 }
 
@@ -125,9 +115,9 @@ const parsePlayerInfo = (content) => {
  */
 const renderPlayerEntry = (content, index) => {
   const { playerName, info, reasons } = parsePlayerInfo(content)
-  
+
   if (!playerName) return <Text key={index}>{content}</Text>
-  
+
   return (
     <div key={index} style={{ marginBottom: 12 }}>
       <Space direction="vertical" size={4} style={{ width: '100%' }}>
@@ -157,24 +147,24 @@ const renderPlayerEntry = (content, index) => {
  */
 const renderSection = (section, index) => {
   const { title, content } = section
-  
+
   // Determine section type and styling
   let icon = null
   let sectionColor = undefined
-  
+
   if (title) {
     const emoji = title.match(/^[🔥⚠️✅🆕🚀🎯🔄📅🪑📊💡💪]/)?.[0]
     icon = getIconForEmoji(emoji)
-    
+
     if (title.includes('Starting')) sectionColor = 'processing'
     if (title.includes('Bench')) sectionColor = 'default'
     if (title.includes('Transfer')) sectionColor = 'warning'
     if (title.includes('Verdict')) sectionColor = 'success'
   }
-  
+
   // Check if this section contains multiple player entries (contains " | ")
   const hasMultiplePlayers = content.includes(' | ') && !title?.includes('Group')
-  
+
   return (
     <div key={index} style={{ marginBottom: index < 2 ? 16 : 8 }}>
       {title && (
@@ -185,7 +175,7 @@ const renderSection = (section, index) => {
           </Text>
         </Space>
       )}
-      
+
       <div style={{ paddingLeft: title && icon ? 24 : 0 }}>
         {hasMultiplePlayers ? (
           // Multiple players - render each separately
@@ -197,7 +187,7 @@ const renderSection = (section, index) => {
           </Text>
         )}
       </div>
-      
+
       {/* Extract and display metrics if available */}
       {!hasMultiplePlayers && renderMetrics(content).length > 0 && (
         <Space size={4} style={{ marginTop: 8, paddingLeft: title && icon ? 24 : 0 }}>
@@ -219,9 +209,9 @@ const renderSection = (section, index) => {
  */
 export const SquadExplanation = ({ explanation }) => {
   if (!explanation) return null
-  
+
   const sections = parseExplanation(explanation)
-  
+
   if (!sections || sections.length === 0) {
     return (
       <Collapse
@@ -242,7 +232,7 @@ export const SquadExplanation = ({ explanation }) => {
       />
     )
   }
-  
+
   return (
     <Collapse
       size="small"

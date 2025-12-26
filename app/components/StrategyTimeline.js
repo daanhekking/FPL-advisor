@@ -1,6 +1,4 @@
-import React from 'react'
-import { Card, Steps, Typography, Tag, Alert, Space, Divider } from 'antd'
-import { ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { Card, Steps, Typography, Tag, Alert, Space, Divider, ReloadOutlined, ThunderboltOutlined } from '../design-system'
 
 const { Title, Text } = Typography
 
@@ -36,15 +34,15 @@ export const StrategyTimeline = ({ strategy }) => {
                 )
             }
         }
-        
+
         // Regular chip recommendations
-        const chipColor = 
+        const chipColor =
             item.chip.includes('Wildcard') ? 'purple' :
-            item.chip.includes('Triple') ? 'gold' :
-            item.chip.includes('Bench') ? 'green' :
-            item.chip.includes('Free') ? 'blue' :
-            'default'
-        
+                item.chip.includes('Triple') ? 'gold' :
+                    item.chip.includes('Bench') ? 'green' :
+                        item.chip.includes('Free') ? 'blue' :
+                            'default'
+
         return {
             title: `GW ${item.suggestedGW}`,
             status: item.urgent ? 'error' : 'process',
@@ -75,15 +73,15 @@ export const StrategyTimeline = ({ strategy }) => {
                 type="info"
                 message={currentPhase === 1 ? "First Half Strategy (GW1-19)" : "Second Half Strategy (GW20-38)"}
                 description={
-                    currentPhase === 1 
+                    currentPhase === 1
                         ? "Plan your chip usage for the first half of the season. All chips reset at GW19, giving you a fresh set for the second half."
                         : "Your chips have reset! Plan your second set of chips for the season run-in."
                 }
                 showIcon
                 style={{ marginBottom: 16 }}
             />
-            
-            <Card 
+
+            <Card
                 title={
                     <Space>
                         <ThunderboltOutlined />
@@ -101,7 +99,7 @@ export const StrategyTimeline = ({ strategy }) => {
                     direction="vertical"
                 />
             </Card>
-            
+
             {currentPhase === 1 && (
                 <Alert
                     type="warning"
