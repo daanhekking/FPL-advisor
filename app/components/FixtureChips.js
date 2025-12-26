@@ -12,15 +12,12 @@ export function FixtureChips({ fixtures, maxShow = 5, showTooltip = false }) {
   return (
     <Space size={4} wrap>
       {fixtures.slice(0, maxShow).map((fixture, idx) => (
-        <span key={idx}>
-          <FixtureDifficultyTag
-            difficulty={fixture.difficulty}
-            showLabel={false}
-          />
-          <span style={{ marginLeft: 4, marginRight: 8 }}>
-            {fixture.isHome ? '' : '@'}{fixture.opponent}
-          </span>
-        </span>
+        <FixtureDifficultyTag
+          key={idx}
+          difficulty={fixture.difficulty}
+          showLabel={false}
+          content={`${fixture.isHome ? '' : '@'}${fixture.opponent}`}
+        />
       ))}
     </Space>
   )

@@ -9,6 +9,16 @@ import {
   generateOutfieldExplanation,
   generateTransferExplanations
 } from '../utils/squad-explanations'
+import {
+  createPlayerColumn,
+  createPositionColumn,
+  createPriceColumn,
+  createGameweekColumn,
+  createAvgDifficultyColumn,
+  createFormColumn,
+  createPPGColumn,
+  createTotalPointsColumn
+} from './TableColumns'
 
 const { Text, Title } = Typography
 const { Option } = Select
@@ -78,9 +88,27 @@ export const RecommendedTeamTab = ({
     return ''
   }
 
-  // Performance score column
-  const performanceScoreColumn = [
-    {
+  // Identify the next 5 Gameweeks
+  const nextGameweeks = React.useMemo(() => {
+    if (!squadWithCaptaincy) return []
+    const allPlayers = [
+      ...(squadWithCaptaincy.GKP || []),
+      ...(squadWithCaptaincy.DEF || []),
+      ...(squadWithCaptaincy.MID || []),
+      ...(squadWithCaptaincy.FWD || [])
+    ]
+    if (allPlayers.length === 0) return []
+    // Find a player with fixtures to extract GW numbers
+    const playerWithFixtures = allPlayers.find(p => p.fixtures && p.fixtures.length > 0)
+    if (!playerWithFixtures) return []
+
+    return playerWithFixtures.fixtures.slice(0, 5).map(f => f.event)
+  }, [squadWithCaptaincy])
+
+  // Custom Columns for Recommended Team
+  const customColumns = React.useMemo(() => {
+    // Basic performance column
+    const perfCol = {
       title: (
         <Tooltip title="Expected performance score based on form, fixtures, price, and attacking output. Higher score = better expected performance.">
           <Space>
@@ -90,66 +118,53 @@ export const RecommendedTeamTab = ({
         </Tooltip>
       ),
       key: 'performanceScore',
-      width: 180,
+      width: 140, // Slightly narrower since we have more columns now
       align: 'center',
-      sorter: (a, b) => {
-        const scoreA = a.finalScore || a.performanceScore || 0
-        const scoreB = b.finalScore || b.performanceScore || 0
-        return scoreB - scoreA
-      },
       render: (_, record) => {
         const score = record.finalScore || record.performanceScore || 0
         const rank = record.rank
-        const penalty = record.penaltyApplied
-
         if (!score) return <Text type="secondary">-</Text>
 
-        // Determine color based on score range
         let color = 'default'
-        let label = 'Below Average'
-
-        if (score >= 1000) {
-          color = 'gold'
-          label = 'Elite'
-        } else if (score >= 800) {
-          color = 'success'
-          label = 'Excellent'
-        } else if (score >= 600) {
-          color = 'processing'
-          label = 'Good'
-        } else if (score >= 400) {
-          color = 'default'
-          label = 'Average'
-        } else {
-          color = 'warning'
-          label = 'Below Average'
-        }
+        if (score >= 1000) color = 'gold'
+        else if (score >= 800) color = 'success'
+        else if (score >= 600) color = 'processing'
+        else if (score >= 400) color = 'default'
+        else color = 'warning'
 
         return (
           <Space direction="vertical" size={0} style={{ width: '100%' }}>
-            <Tooltip title={`${label} performance expected`}>
-              <Tag color={color} style={{ fontSize: 13, padding: '2px 8px', margin: 0 }}>
-                {(score || 0).toFixed(0)}
-              </Tag>
-            </Tooltip>
+            <Tag color={color} style={{ fontSize: 13, padding: '2px 8px', margin: 0 }}>
+              {(score || 0).toFixed(0)}
+            </Tag>
             {rank && (
               <Text type="secondary" style={{ fontSize: 11 }}>
                 Rank #{rank}
               </Text>
             )}
-            {penalty && penalty !== 'NONE' && !penalty.includes('Top') && (
-              <Tag
-                color={penalty.includes('60%') ? 'red' : 'orange'}
-                style={{ fontSize: 10, margin: '2px 0 0 0', padding: '0 4px' }}
-              >
-                {penalty.includes('60%') ? '-60%' : '-30%'}
-              </Tag>
-            )}
           </Space>
         )
       }
     }
-  ]
+
+    if (nextGameweeks.length === 0) {
+      return [...createPlayerColumn({ showCaptaincy: true, showBench: true }), perfCol]
+    }
+
+    const gwColumns = nextGameweeks.map((gw, index) => createGameweekColumn(gw, index))
+
+    return [
+      createPlayerColumn({ showPosition: false, showForm: false, showCaptaincy: true, showBench: true }),
+      createPositionColumn(),
+      createPriceColumn(),
+      ...gwColumns,
+      createAvgDifficultyColumn(),
+      perfCol,
+      createFormColumn(),
+      createPPGColumn(),
+      createTotalPointsColumn()
+    ]
+  }, [nextGameweeks])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -261,7 +276,7 @@ export const RecommendedTeamTab = ({
               players={squadWithCaptaincy.GKP}
               explanation={generateGKPExplanation(squadWithCaptaincy.GKP)}
               rowClassName={getRowClassName}
-              extraColumns={performanceScoreColumn}
+              columns={customColumns}
             />
 
             {/* Defenders */}
@@ -270,7 +285,7 @@ export const RecommendedTeamTab = ({
               players={squadWithCaptaincy.DEF}
               explanation={generateOutfieldExplanation(squadWithCaptaincy.DEF, 'Defenders')}
               rowClassName={getRowClassName}
-              extraColumns={performanceScoreColumn}
+              columns={customColumns}
             />
 
             {/* Midfielders */}
@@ -279,7 +294,7 @@ export const RecommendedTeamTab = ({
               players={squadWithCaptaincy.MID}
               explanation={generateOutfieldExplanation(squadWithCaptaincy.MID, 'Midfielders')}
               rowClassName={getRowClassName}
-              extraColumns={performanceScoreColumn}
+              columns={customColumns}
             />
 
             {/* Forwards */}
@@ -288,7 +303,7 @@ export const RecommendedTeamTab = ({
               players={squadWithCaptaincy.FWD}
               explanation={generateOutfieldExplanation(squadWithCaptaincy.FWD, 'Forwards')}
               rowClassName={getRowClassName}
-              extraColumns={performanceScoreColumn}
+              columns={customColumns}
             />
           </div>
         </div>

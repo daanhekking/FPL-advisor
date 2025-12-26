@@ -14,7 +14,7 @@ import {
  * FixtureDifficultyTag Component
  * Standardized fixture difficulty display
  */
-export const FixtureDifficultyTag = ({ difficulty, showLabel = false }) => {
+export const FixtureDifficultyTag = ({ difficulty, showLabel = false, content }) => {
   const getColor = (diff) => {
     // Use Ant Design standard color names
     if (diff <= 2) return 'success'
@@ -38,10 +38,14 @@ export const FixtureDifficultyTag = ({ difficulty, showLabel = false }) => {
           border: 'none',
           fontWeight: 600,
           minWidth: 32,
-          textAlign: 'center'
+          textAlign: 'center',
+          padding: content ? '0 8px' : '0 4px'
         }}
       >
-        {showLabel ? getLabel(difficulty) : (difficulty !== null && difficulty !== undefined ? parseFloat(difficulty).toFixed(1) : '-')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {content && <span style={{ marginRight: 4 }}>{content}</span>}
+          <span>{showLabel ? getLabel(difficulty) : (difficulty !== null && difficulty !== undefined ? parseFloat(difficulty).toFixed(0) : '-')}</span>
+        </div>
       </Tag>
     </Tooltip>
   )
