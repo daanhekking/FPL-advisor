@@ -10,7 +10,7 @@
  */
 export const getDifficultyColor = (difficulty) => {
   if (difficulty <= 2) return 'success'
-  if (difficulty === 3) return 'warning'
+  if (difficulty === 3) return 'default' // Neutral
   if (difficulty >= 4) return 'error'
   return 'default'
 }
@@ -20,7 +20,7 @@ export const getDifficultyColor = (difficulty) => {
  */
 export const getDifficultyHexColor = (difficulty) => {
   if (difficulty <= 2) return '#52c41a'  // Ant Design success
-  if (difficulty === 3) return '#faad14'  // Ant Design warning
+  if (difficulty === 3) return '#595959'  // Dark grey (neutral)
   if (difficulty === 4) return '#ff7a45'  // Orange-red
   return '#ff4d4f'  // Ant Design error
 }

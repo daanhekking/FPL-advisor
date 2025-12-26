@@ -18,7 +18,7 @@ export const FixtureDifficultyTag = ({ difficulty, showLabel = false, content })
   const getColor = (diff) => {
     // Use Ant Design standard color names
     if (diff <= 2) return 'success'
-    if (diff === 3) return 'warning'
+    if (diff === 3) return 'default' // Neutral/Dark Grey
     if (diff >= 4) return 'error'
     return 'default'
   }
@@ -30,16 +30,19 @@ export const FixtureDifficultyTag = ({ difficulty, showLabel = false, content })
     return 'Very Hard'
   }
 
+  const tagColor = difficulty === 3 ? '#595959' : getColor(difficulty)
+
   return (
     <Tooltip title={`Difficulty: ${getLabel(difficulty)}`}>
       <Tag
-        color={getColor(difficulty)}
+        color={tagColor}
         style={{
           border: 'none',
           fontWeight: 600,
           minWidth: 32,
           textAlign: 'center',
-          padding: content ? '0 8px' : '0 4px'
+          padding: content ? '0 8px' : '0 4px',
+          color: difficulty === 3 ? '#fff' : undefined
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

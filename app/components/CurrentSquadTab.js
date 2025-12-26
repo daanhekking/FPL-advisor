@@ -149,7 +149,7 @@ export const CurrentSquadTab = ({ mySquadDataGrouped, loading }) => {
                           fontSize: 18,
                           fontWeight: 600,
                           color: getDifficultyColor(item.avgDiff) === 'success' ? '#389e0d' :
-                            getDifficultyColor(item.avgDiff) === 'warning' ? '#d46b08' :
+                            getDifficultyColor(item.avgDiff) === 'default' ? '#595959' :
                               getDifficultyColor(item.avgDiff) === 'error' ? '#cf1322' : 'inherit'
                         }}
                       />
